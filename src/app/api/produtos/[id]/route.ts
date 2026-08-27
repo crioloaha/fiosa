@@ -93,6 +93,8 @@ export async function PUT(
       status,
       codigo,
       tags,
+      variacoes,
+      custoMateriais,
     } = body;
 
     let slug = produto.slug;
@@ -124,6 +126,8 @@ export async function PUT(
         status: status ?? produto.status,
         codigo: codigo !== undefined ? codigo : produto.codigo,
         tags: tags !== undefined ? tags : produto.tags,
+        variacoes: variacoes !== undefined ? (typeof variacoes === 'string' ? variacoes : JSON.stringify(variacoes)) : produto.variacoes,
+        custoMateriais: custoMateriais !== undefined ? (typeof custoMateriais === 'string' ? custoMateriais : JSON.stringify(custoMateriais)) : produto.custoMateriais,
       },
     });
 
@@ -220,6 +224,8 @@ export async function POST(
         status: 'RASCUNHO',
         codigo: produto.codigo ? `${produto.codigo}-COPY` : null,
         tags: produto.tags,
+        variacoes: produto.variacoes,
+        custoMateriais: produto.custoMateriais,
       },
     });
 

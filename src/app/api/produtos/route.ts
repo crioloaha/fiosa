@@ -160,6 +160,8 @@ export async function POST(request: NextRequest) {
       codigo,
       tags,
       artesaoId: targetArtesaoId, // only for Superadmin to create on behalf of artisan
+      variacoes,
+      custoMateriais,
     } = body;
 
     if (!nome || !categoriaId) {
@@ -208,6 +210,8 @@ export async function POST(request: NextRequest) {
         status: status || 'PUBLICADO',
         codigo: codigo || '',
         tags: tags || '',
+        variacoes: variacoes ? (typeof variacoes === 'string' ? variacoes : JSON.stringify(variacoes)) : null,
+        custoMateriais: custoMateriais ? (typeof custoMateriais === 'string' ? custoMateriais : JSON.stringify(custoMateriais)) : null,
       },
     });
 

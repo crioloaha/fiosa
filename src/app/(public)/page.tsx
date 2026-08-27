@@ -3,31 +3,41 @@ import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import { getConfig } from '@/lib/config';
 import { ArrowRight, MapPin, Sparkles, Compass, ShieldCheck } from 'lucide-react';
+import ArtesaosCarousel from '@/components/ArtesaosCarousel';
+import ProdutosCarousel from '@/components/ProdutosCarousel';
 
 export const revalidate = 0; // Disable caching for dynamic visual analytics increments
 
 export default async function HomePage() {
   const config = await getConfig();
 
-  // Fetch all active artisans ordered by views
+  // Fetch all active artisans
   const artesaos = await prisma.artesao.findMany({
     where: { perfilAtivo: true },
-    orderBy: { visualizacoesPerfil: 'desc' },
   });
 
-  // Fetch featured products (top 4 by views)
-  const produtos = await prisma.produto.findMany({
+  // Fetch featured products (all active products ordered by views)
+  const allProducts = await prisma.produto.findMany({
     where: {
       status: 'PUBLICADO',
       artesao: { perfilAtivo: true },
     },
-    take: 4,
     include: {
       artesao: true,
       categoria: true,
     },
     orderBy: { visualizacoes: 'desc' },
   });
+
+  // Filter to keep at most 1 product per artisan (their most viewed one)
+  const seenArtisans = new Set<string>();
+  const produtos: any[] = [];
+  for (const p of allProducts) {
+    if (!seenArtisans.has(p.artesaoId)) {
+      seenArtisans.add(p.artesaoId);
+      produtos.push(p);
+    }
+  }
 
   // Fetch experiences
   const experiencias = await prisma.experiencia.findMany({
@@ -190,50 +200,7 @@ export default async function HomePage() {
           </div>
 
           {/* Horizontal scroll carousel */}
-          <div className="relative">
-            <div className="flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {artesaos.map((artesao) => (
-                <div
-                  key={artesao.id}
-                  className="snap-start shrink-0 w-72 bg-fiosa-cru rounded-xl overflow-hidden border border-fiosa-marrom/10 shadow-sm hover:shadow-md transition-shadow flex flex-col"
-                >
-                  <div className="relative h-56 w-full bg-slate-100">
-                    <Image
-                      src={artesao.foto || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop'}
-                      alt={artesao.nome}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="p-5 flex flex-col flex-grow space-y-3">
-                    <div>
-                      <h3 className="font-serif text-lg text-fiosa-grafite font-bold">{artesao.nome}</h3>
-                      {artesao.marca && (
-                        <p className="font-sans text-xs tracking-widest text-fiosa-marrom uppercase font-bold">
-                          {artesao.marca}
-                        </p>
-                      )}
-                    </div>
-                    <p className="font-sans text-xs text-fiosa-grafite/70 line-clamp-3 leading-relaxed flex-grow">
-                      {artesao.bio}
-                    </p>
-                    <div className="flex items-center text-xs text-fiosa-grafite/50 gap-1 font-semibold">
-                      <MapPin size={14} className="text-fiosa-terracota" />
-                      {artesao.cidade}
-                    </div>
-                    <Link
-                      href={`/artesao/${artesao.slug}`}
-                      className="block text-center border border-fiosa-terracota text-fiosa-terracota hover:bg-fiosa-terracota hover:text-white py-2.5 rounded font-sans font-bold text-[11px] tracking-wider transition-all"
-                    >
-                      CONHEÇA O ARTESÃO
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Fade hint on right edge */}
-            <div className="pointer-events-none absolute top-0 right-0 h-full w-12 bg-gradient-to-l from-tecelagem to-transparent" />
-          </div>
+          <ArtesaosCarousel artesaos={artesaos} />
         </div>
         <div className="absolute bottom-0 inset-x-0 franja-horizontal" />
       </section>
@@ -259,59 +226,8 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {produtos.map((produto) => {
-            const fotosArray = JSON.parse(produto.fotos || '[]');
-            const mainFoto = fotosArray[0] || 'https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?w=600&q=80';
-            return (
-              <div
-                key={produto.id}
-                className="group flex flex-col h-full bg-fiosa-cru rounded-xl overflow-hidden border border-fiosa-marrom/10 shadow-sm"
-              >
-                <div className="relative h-72 w-full bg-slate-100 overflow-hidden">
-                  <Image
-                    src={mainFoto}
-                    alt={produto.nome}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 bg-fiosa-cru/90 backdrop-blur-sm px-3 py-1 rounded text-[10px] font-sans font-bold text-fiosa-oliva border border-fiosa-marrom/20">
-                    {produto.categoria.nome}
-                  </div>
-                </div>
-                {/* Visual Loom Fringe Detail */}
-                <div className="franja-horizontal" />
-                <div className="p-5 flex flex-col flex-grow space-y-3">
-                  <div>
-                    <h3 className="font-serif text-base text-fiosa-grafite font-bold line-clamp-1">
-                      {produto.nome}
-                    </h3>
-                    <p className="text-[11px] text-fiosa-grafite/60 font-sans">
-                      Por <strong>{produto.artesao.nome}</strong>
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 mt-auto border-t border-fiosa-marrom/10">
-                    {produto.artesao.mostrarPreco && produto.preco ? (
-                      <span className="font-sans text-sm font-extrabold text-fiosa-terracota">
-                        R$ {produto.preco.toFixed(2).replace('.', ',')}
-                      </span>
-                    ) : (
-                      <span className="font-sans text-xs text-fiosa-grafite/50 font-semibold italic">
-                        Sob consulta
-                      </span>
-                    )}
-                    <Link
-                      href={`/produto/${produto.slug}`}
-                      className="bg-fiosa-grafite hover:bg-fiosa-terracota text-white px-3 py-2 rounded text-[10px] font-sans font-bold tracking-wider transition-colors uppercase"
-                    >
-                      Ver produto
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* Horizontal scroll carousel of featured products */}
+        <ProdutosCarousel produtos={produtos} />
       </section>
 
       {/* 5. Experiências */}
@@ -399,13 +315,13 @@ export default async function HomePage() {
               Turismo Cultural
             </span>
             <h2 className="font-serif text-4xl text-fiosa-grafite leading-tight">
-              Resende Costa, a Capital Mineira do Tear
+              {config.sobreResendeCostaTitulo}
             </h2>
             <p className="font-sans text-sm text-fiosa-grafite/80 leading-relaxed">
-              Localizada no Campo das Vertentes, vizinha de São João del-Rei e Tiradentes, Resende Costa respira artesanato. A cidade é famosa por suas fachadas repletas de colchas, caminhos de mesa e tapetes coloridos, uma tradição que atravessa gerações e remonta ao século XVIII.
+              {config.sobreResendeCostaTexto1}
             </p>
             <p className="font-sans text-sm text-fiosa-grafite/80 leading-relaxed">
-              Caminhar pelas lojas de Resende Costa and ouvir o som ritmado dos teares tradicionais funcionando é uma imersão na cultura viva de Minas Gerais.
+              {config.sobreResendeCostaTexto2}
             </p>
             <Link
               href="/visite-resende-costa"
@@ -417,8 +333,8 @@ export default async function HomePage() {
           </div>
           <div className="relative h-[450px] w-full bg-slate-200">
             <Image
-              src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80"
-              alt="Montanhas e paisagens de Minas Gerais"
+              src={config.sobreResendeCostaImagem}
+              alt="Sobre Resende Costa"
               fill
               className="object-cover"
             />
@@ -426,21 +342,28 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 7. CTA Final */}
-      <section className="bg-fiosa-grafite text-center py-20 px-4 space-y-6">
-        <h2 className="font-serif text-3xl md:text-5xl text-fiosa-cru">
-          Venha conhecer os fios que conectam Resende Costa.
-        </h2>
-        <p className="max-w-lg mx-auto font-sans text-xs text-fiosa-linho/60 leading-relaxed">
-          Nossos artesãos e ateliês estão de portas abertas para apresentar suas tramas, cores e vivências únicas.
-        </p>
-        <div className="pt-4">
-          <Link
-            href="/visite-resende-costa"
-            className="bg-fiosa-terracota text-white hover:bg-fiosa-terracota/90 px-8 py-4 rounded font-sans font-bold text-xs tracking-wider transition-all duration-300 uppercase shadow-md inline-block"
-          >
-            PLANEJE SUA VISITA
-          </Link>
+      {/* 7. CTA Final com Moldura e Franjas */}
+      <section className="max-w-5xl mx-auto px-4 py-8">
+        <div className="relative bg-fiosa-grafite border-4 border-double border-fiosa-terracota rounded-2xl p-12 md:p-16 text-center space-y-6 overflow-hidden">
+          {/* Top/Bottom Fringe Detail */}
+          <div className="absolute top-0 inset-x-0 franja-terracota opacity-80" />
+          
+          <h2 className="font-serif text-3xl md:text-5xl text-fiosa-cru pt-4">
+            {config.ctaTitulo}
+          </h2>
+          <p className="max-w-2xl mx-auto font-sans text-sm text-fiosa-linho/80 leading-relaxed">
+            {config.ctaSubtitulo}
+          </p>
+          <div className="pt-4 pb-4">
+            <Link
+              href="/visite-resende-costa"
+              className="bg-fiosa-terracota text-white hover:bg-fiosa-terracota/90 px-8 py-4 rounded font-sans font-bold text-xs tracking-wider transition-all duration-300 uppercase shadow-md inline-block"
+            >
+              PLANEJE SUA VISITA
+            </Link>
+          </div>
+          
+          <div className="absolute bottom-0 inset-x-0 franja-terracota opacity-80" />
         </div>
       </section>
     </div>

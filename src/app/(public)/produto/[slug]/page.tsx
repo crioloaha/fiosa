@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { MessageSquare, ArrowLeft, User, Ruler, Tag, Layers, ClipboardCheck, PackageCheck } from 'lucide-react';
 import AnalyticsTracker from '@/components/AnalyticsTracker';
 import ProductImageGallery from '@/components/ProductImageGallery';
+import ProductDetailsClient from '@/components/ProductDetailsClient';
 
 import type { Metadata } from 'next';
 
@@ -179,22 +180,16 @@ export default async function ProdutoDetailPage({
             </p>
           </div>
 
-          {/* Pricing */}
-          <div className="py-4 border-t border-b border-fiosa-marrom/20">
-            {produto.artesao.mostrarPreco && produto.preco ? (
-              <div className="space-y-1">
-                <span className="font-sans text-xs font-bold text-fiosa-grafite/40 uppercase tracking-wide">Valor aproximado</span>
-                <p className="font-sans text-3xl font-extrabold text-fiosa-terracota">
-                  R$ {produto.preco.toFixed(2).replace('.', ',')}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <span className="font-sans text-xs font-bold text-fiosa-grafite/40 uppercase tracking-wide">Valor</span>
-                <p className="font-sans text-lg font-bold italic text-fiosa-grafite/50">Preço sob consulta</p>
-              </div>
-            )}
-          </div>
+          {/* Client-side product variations & pricing & WhatsApp */}
+          <ProductDetailsClient
+            produtoNome={produto.nome}
+            artesaoNome={produto.artesao.nome}
+            artesaoWhatsapp={produto.artesao.whatsapp}
+            artesaoAceitarWhats={produto.artesao.aceitarWhats}
+            artesaoMostrarPreco={produto.artesao.mostrarPreco}
+            basePreco={produto.preco}
+            variacoesJson={(produto as any).variacoes || null}
+          />
 
           {/* Short description */}
           <div className="space-y-2">
@@ -203,23 +198,6 @@ export default async function ProdutoDetailPage({
               {produto.descricao || 'Nenhuma descrição fornecida para este produto.'}
             </p>
           </div>
-
-          {/* Primary CTA (WhatsApp) */}
-          {produto.artesao.aceitarWhats && produto.artesao.whatsapp && (
-            <div className="pt-4">
-              <Link
-                href={whatsAppUrl}
-                target="_blank"
-                className="flex items-center justify-center gap-2 w-full bg-fiosa-terracota hover:bg-fiosa-terracota/95 text-white py-4 rounded font-sans font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-md"
-              >
-                <MessageSquare size={16} />
-                Quero saber mais
-              </Link>
-              <p className="text-[10px] font-sans text-center text-fiosa-grafite/50 mt-2 font-semibold">
-                Você será direcionado diretamente ao WhatsApp do artesão responsável.
-              </p>
-            </div>
-          )}
 
           {/* Technical Specifications */}
           <div className="bg-fiosa-linho border border-fiosa-marrom/20 rounded-xl p-6 space-y-4">

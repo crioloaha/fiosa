@@ -44,6 +44,19 @@ interface Product {
   visualizacoes: number;
 }
 
+interface VariationItem {
+  id: string;
+  nome: string;
+  preco: number;
+  custo: number;
+}
+
+interface MaterialItem {
+  id: string;
+  nome: string;
+  valor: number;
+}
+
 interface FormData {
   id?: string;
   nome: string;
@@ -60,6 +73,8 @@ interface FormData {
   status: string;
   codigo: string;
   tags: string;
+  variacoes?: VariationItem[];
+  custoMateriais?: MaterialItem[];
 }
 
 const initialFormData: FormData = {
@@ -77,6 +92,8 @@ const initialFormData: FormData = {
   status: 'PUBLICADO',
   codigo: '',
   tags: '',
+  variacoes: [],
+  custoMateriais: [],
 };
 
 export default function GerenciarProdutosPage() {
@@ -254,6 +271,8 @@ export default function GerenciarProdutosPage() {
       status: p.status,
       codigo: p.codigo || '',
       tags: p.tags || '',
+      variacoes: (p as any).variacoes ? JSON.parse((p as any).variacoes) : [],
+      custoMateriais: (p as any).custoMateriais ? JSON.parse((p as any).custoMateriais) : [],
     });
     setEditingId(p.id);
     setIsFormOpen(true);
@@ -272,6 +291,79 @@ export default function GerenciarProdutosPage() {
   ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  // Local helper states for materials and variations inputs
+  const [newMatName, setNewMatName] = useState('');
+  const [newMatValue, setNewMatValue] = useState('');
+
+  const [newVarName, setNewVarName] = useState('');
+  const [newVarPreco, setNewVarPreco] = useState('');
+  const [newVarCusto, setNewVarCusto] = useState('');
+
+  const handleAddMaterial = () => {
+    if (!newMatName || !newMatValue) return;
+    const parsedVal = parseFloat(newMatValue);
+    if (isNaN(parsedVal)) return;
+
+    const newItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      nome: newMatName,
+      valor: parsedVal,
+    };
+
+    const updatedMaterials = [...(formData.custoMateriais || []), newItem];
+    const sumCusto = updatedMaterials.reduce((acc, cur) => acc + cur.valor, 0);
+
+    setFormData((prev) => ({
+      ...prev,
+      custoMateriais: updatedMaterials,
+      custo: sumCusto.toFixed(2), // auto-fill CMV
+    }));
+
+    setNewMatName('');
+    setNewMatValue('');
+  };
+
+  const handleRemoveMaterial = (id: string) => {
+    const updatedMaterials = (formData.custoMateriais || []).filter((m) => m.id !== id);
+    const sumCusto = updatedMaterials.reduce((acc, cur) => acc + cur.valor, 0);
+
+    setFormData((prev) => ({
+      ...prev,
+      custoMateriais: updatedMaterials,
+      custo: sumCusto.toFixed(2), // auto-fill CMV
+    }));
+  };
+
+  const handleAddVariation = () => {
+    if (!newVarName || !newVarPreco) return;
+    const parsedPreco = parseFloat(newVarPreco);
+    const parsedCusto = newVarCusto ? parseFloat(newVarCusto) : 0;
+    if (isNaN(parsedPreco) || isNaN(parsedCusto)) return;
+
+    const newItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      nome: newVarName,
+      preco: parsedPreco,
+      custo: parsedCusto,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      variacoes: [...(prev.variacoes || []), newItem],
+    }));
+
+    setNewVarName('');
+    setNewVarPreco('');
+    setNewVarCusto('');
+  };
+
+  const handleRemoveVariation = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      variacoes: (prev.variacoes || []).filter((v) => v.id !== id),
+    }));
   };
 
   // Image Upload handler
@@ -530,6 +622,175 @@ export default function GerenciarProdutosPage() {
                   className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#C15C3D]/30 border focus:border-[#C15C3D] rounded focus:outline-none font-sans text-xs font-bold"
                   placeholder="0,00"
                 />
+              </div>
+            </div>
+
+            {/* Composição de Custos de Materiais (CMV) */}
+            <div className="bg-[#FDFBF7] p-5 rounded-xl border border-[#8D7F73]/15 space-y-4">
+              <div>
+                <h4 className="font-serif text-sm font-bold text-[#2B2D2F]">Composição do CMV (Materiais Gasto)</h4>
+                <p className="text-[10px] text-[#2B2D2F]/60">A soma dos valores dos materiais atualizará automaticamente o campo CVM acima.</p>
+              </div>
+
+              {/* Materiais cadastrados list */}
+              {formData.custoMateriais && formData.custoMateriais.length > 0 ? (
+                <div className="overflow-x-auto border border-[#8D7F73]/20 rounded bg-white">
+                  <table className="w-full text-left font-sans text-xs">
+                    <thead className="bg-[#F3EFE9] text-[#2B2D2F]/60 font-bold uppercase text-[9px] border-b border-[#8D7F73]/20">
+                      <tr>
+                        <th className="py-2 px-3">Material / Item</th>
+                        <th className="py-2 px-3 text-right">Valor Gasto</th>
+                        <th className="py-2 px-3 text-right">Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#8D7F73]/15">
+                      {formData.custoMateriais.map((mat) => (
+                        <tr key={mat.id} className="hover:bg-[#F3EFE9]/10">
+                          <td className="py-2 px-3 font-semibold text-[#2B2D2F]">{mat.nome}</td>
+                          <td className="py-2 px-3 text-right text-[#606C38] font-bold">
+                            R$ {mat.valor.toFixed(2).replace('.', ',')}
+                          </td>
+                          <td className="py-2 px-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMaterial(mat.id)}
+                              className="text-red-600 hover:text-red-800 transition-colors p-1"
+                              aria-label="Remover material"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-[10px] text-fiosa-grafite/50 italic py-2">Nenhum material adicionado à composição de custo.</p>
+              )}
+
+              {/* Adicionar novo material form */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pt-2 border-t border-[#8D7F73]/10">
+                <div className="space-y-1">
+                  <label className="block font-sans text-[9px] font-bold uppercase text-[#2B2D2F]/70">Nome do Material</label>
+                  <input
+                    type="text"
+                    value={newMatName}
+                    onChange={(e) => setNewMatName(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-white border border-[#8D7F73]/30 rounded text-xs"
+                    placeholder="Ex: Algodão Cru"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block font-sans text-[9px] font-bold uppercase text-[#2B2D2F]/70">Valor Gasto (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newMatValue}
+                    onChange={(e) => setNewMatValue(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-white border border-[#8D7F73]/30 rounded text-xs font-bold"
+                    placeholder="0,00"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddMaterial}
+                  className="bg-[#606C38] hover:bg-[#606C38]/95 text-white py-1.5 px-3 rounded font-sans font-bold uppercase text-[10px] tracking-wider transition-colors shadow-sm"
+                >
+                  Adicionar Material
+                </button>
+              </div>
+            </div>
+
+            {/* Variações de Produto */}
+            <div className="bg-[#FDFBF7] p-5 rounded-xl border border-[#8D7F73]/15 space-y-4">
+              <div>
+                <h4 className="font-serif text-sm font-bold text-[#2B2D2F]">Variações de Produto (Tamanho / Cor)</h4>
+                <p className="text-[10px] text-[#2B2D2F]/60">Cadastre opções de tamanho ou cor que alterem o preço final ou o custo de fabricação.</p>
+              </div>
+
+              {/* Variações list */}
+              {formData.variacoes && formData.variacoes.length > 0 ? (
+                <div className="overflow-x-auto border border-[#8D7F73]/20 rounded bg-white">
+                  <table className="w-full text-left font-sans text-xs">
+                    <thead className="bg-[#F3EFE9] text-[#2B2D2F]/60 font-bold uppercase text-[9px] border-b border-[#8D7F73]/20">
+                      <tr>
+                        <th className="py-2 px-3">Variação (Tamanho / Cor)</th>
+                        <th className="py-2 px-3 text-right">Preço de Venda</th>
+                        <th className="py-2 px-3 text-right">Custo (CVM)</th>
+                        <th className="py-2 px-3 text-right">Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#8D7F73]/15">
+                      {formData.variacoes.map((v) => (
+                        <tr key={v.id} className="hover:bg-[#F3EFE9]/10">
+                          <td className="py-2 px-3 font-semibold text-[#2B2D2F]">{v.nome}</td>
+                          <td className="py-2 px-3 text-right text-fiosa-terracota font-bold">
+                            R$ {v.preco.toFixed(2).replace('.', ',')}
+                          </td>
+                          <td className="py-2 px-3 text-right text-[#2B2D2F]/60">
+                            R$ {v.custo.toFixed(2).replace('.', ',')}
+                          </td>
+                          <td className="py-2 px-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveVariation(v.id)}
+                              className="text-red-600 hover:text-red-800 transition-colors p-1"
+                              aria-label="Remover variação"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-[10px] text-fiosa-grafite/50 italic py-2">Nenhuma variação cadastrada para este produto.</p>
+              )}
+
+              {/* Adicionar variação form */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end pt-2 border-t border-[#8D7F73]/10">
+                <div className="space-y-1 sm:col-span-2">
+                  <label className="block font-sans text-[9px] font-bold uppercase text-[#2B2D2F]/70">Nome da Variação (Ex: P / Cru, M / Terracota)</label>
+                  <input
+                    type="text"
+                    value={newVarName}
+                    onChange={(e) => setNewVarName(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-white border border-[#8D7F73]/30 rounded text-xs"
+                    placeholder="Tamanho e/ou Cor"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block font-sans text-[9px] font-bold uppercase text-[#2B2D2F]/70">Preço de Venda (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newVarPreco}
+                    onChange={(e) => setNewVarPreco(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-white border border-[#8D7F73]/30 rounded text-xs font-bold"
+                    placeholder="0,00"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block font-sans text-[9px] font-bold uppercase text-[#2B2D2F]/70">Custo da Opção (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newVarCusto}
+                    onChange={(e) => setNewVarCusto(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-white border border-[#8D7F73]/30 rounded text-xs"
+                    placeholder="0,00"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddVariation}
+                  className="bg-[#C15C3D] hover:bg-[#C15C3D]/95 text-white py-1.5 px-3 rounded font-sans font-bold uppercase text-[10px] tracking-wider transition-colors shadow-sm sm:col-span-4"
+                >
+                  Adicionar Variação
+                </button>
               </div>
             </div>
 

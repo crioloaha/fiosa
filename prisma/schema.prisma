@@ -99,6 +99,8 @@ model Produto {
   tecnica         String?
   dimensoes       String?
   peso            Float?
+  variacoes       String?  // JSON string: [{"id": "uuid", "nome": "P / Vermelho", "preco": 100, "custo": 50}]
+  custoMateriais  String?  // JSON string: [{"nome": "Fio de algodão", "valor": 12.5}]
   disponibilidade String   @default("DISPONIVEL") // "DISPONIVEL" | "SOB_ENCOMENDA" | "ESGOTADO"
   status          String   @default("PUBLICADO")  // "RASCUNHO" | "PUBLICADO" | "OCULTO"
   codigo          String?  // SKU
@@ -186,6 +188,32 @@ model Configuracao {
   contatoTelefone    String   @default("(32) 3354-1111")
   contatoEmail       String   @default("contato@fiosa.com.br")
   contatoInstagram   String   @default("fiosa.colaborativa")
+
+  // Conteúdos Dinâmicos de Páginas
+  sobreResendeCostaTitulo  String   @default("Resende Costa, a Capital Mineira do Tear")
+  sobreResendeCostaTexto1  String   @default("Localizada no Campo das Vertentes, vizinha de São João del-Rei e Tiradentes, Resende Costa respira artesanato. A cidade é famosa por suas fachadas repletas de colchas, caminhos de mesa e tapetes coloridos, uma tradição que atravessa gerações e remonta ao século XVIII.")
+  sobreResendeCostaTexto2  String   @default("Caminhar pelas lojas de Resende Costa and ouvir o som ritmado dos teares tradicionais funcionando é uma imersão na cultura viva de Minas Gerais.")
+  sobreResendeCostaImagem  String   @default("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80")
+  
+  visiteIntroTitulo        String   @default("Conheça a Nossa Cidade")
+  visiteIntroTexto         String   @default("Resende Costa está localizada no Circuito Turístico Trilha dos Inconfidentes, no Campo das Vertentes. Vizinha das históricas São João del-Rei e Tiradentes, a cidade destaca-se nacionalmente pela produção têxtil artesanal. Aqui, quase todas as famílias possuem um laço direto ou indireto com o tear manual. É um refúgio acolhedor onde a hospitalidade mineira e a cultura popular estão em cada esquina.")
+  
+  visiteSecao1Titulo       String   @default("A Tradição do Tear")
+  visiteSecao1Texto        String   @default("A tradição do tear em Resende Costa remonta ao século XVIII, trazida pelos colonizadores portugueses e mantida viva por gerações de tecelões locais. Originalmente focado na produção de colchas e tecidos utilitários pesados, hoje o tear se funde com o design brasileiro, gerando artigos de decoração valorizados internacionalmente.")
+  visiteSecao1Imagem       String   @default("https://images.unsplash.com/photo-1590736969955-71cc94801759?w=600&q=80")
+  
+  visiteSecao2Titulo       String   @default("O Artesanato Local")
+  visiteSecao2Texto        String   @default("Ao caminhar pelas ruas de Resende Costa, o visitante depara-se com fachadas cobertas de cores vivas e texturas rústicas de algodão cru. É uma galeria de arte a céu aberto. São dezenas de ateliês familiares vendendo tapetes, caminhos de mesa, mantas para sofás, almofadas e cortinas diretamente ao consumidor.")
+  visiteSecao2Imagem       String   @default("https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&q=80")
+  
+  experienciasIntroTitulo  String   @default("Experiências & Turismo Cultural")
+  experienciasIntroTexto   String   @default("Participe de vivências exclusivas com os artesãos de Resende Costa. Descubra a tradição secular do tear manual, faça oficinas práticas de tecelagem ou tingimento natural, e conheça a nossa cultura de perto.")
+  
+  contatoIntroTitulo       String   @default("Contato da FIOSA")
+  contatoIntroTexto        String   @default("Tem alguma dúvida sobre os produtos, deseja saber mais sobre as experiências de tear ou quer fazer um contato institucional? Envie uma mensagem!")
+  
+  ctaTitulo                String   @default("Venha conhecer os fios que conectam Resende Costa.")
+  ctaSubtitulo             String   @default("Nossos artesãos e ateliês estão de portas abertas para apresentar suas tramas, cores e vivências únicas.")
 
   updatedAt          DateTime @updatedAt
 }

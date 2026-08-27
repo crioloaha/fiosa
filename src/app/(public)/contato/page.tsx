@@ -22,10 +22,10 @@ export default async function ContatoPage() {
           Fale Conosco
         </span>
         <h1 className="font-serif text-4xl md:text-5xl text-fiosa-grafite">
-          Contato da {config.logoTexto}
+          {config.contatoIntroTitulo}
         </h1>
         <p className="font-sans text-sm text-fiosa-grafite/70 leading-relaxed">
-          Tem alguma dúvida sobre os produtos, deseja saber mais sobre as experiências de tear ou quer fazer um contato institucional? Envie uma mensagem!
+          {config.contatoIntroTexto}
         </p>
       </div>
 

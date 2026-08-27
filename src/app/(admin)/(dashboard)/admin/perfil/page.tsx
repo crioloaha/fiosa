@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Save, Upload, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import ImageCropperModal from '@/components/ImageCropperModal';
 
 interface ProfileData {
   id: string;
+  slug?: string;
   nome: string;
   marca: string;
   bio: string;
@@ -76,12 +78,29 @@ export default function PerfilPage() {
     setProfile({ ...profile, [name]: finalValue });
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, targetField: 'foto' | 'capa') => {
+  // Cropper State
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperSrc, setCropperSrc] = useState('');
+  const [cropperAspect, setCropperAspect] = useState<'1:1' | '3:1' | '16:9'>('1:1');
+  const [cropperTarget, setCropperTarget] = useState<'foto' | 'capa'>('foto');
+
+  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>, targetField: 'foto' | 'capa') => {
     const file = e.target.files?.[0];
-    if (!file || !profile) return;
+    if (!file) return;
+
+    const src = URL.createObjectURL(file);
+    setCropperSrc(src);
+    setCropperAspect(targetField === 'foto' ? '1:1' : '3:1');
+    setCropperTarget(targetField);
+    setCropperOpen(true);
+  };
+
+  const handleCroppedImage = async (blob: Blob) => {
+    if (!profile) return;
+    setCropperOpen(false);
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', blob, `${profile.slug}-${cropperTarget}.jpg`);
 
     try {
       setSaving(true);
@@ -95,7 +114,7 @@ export default function PerfilPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro no upload.');
 
-      setProfile({ ...profile, [targetField]: data.url });
+      setProfile({ ...profile, [cropperTarget]: data.url });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -200,7 +219,7 @@ export default function PerfilPage() {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'foto')}
+                      onChange={(e) => handleImageFileSelect(e, 'foto')}
                       className="hidden"
                     />
                   </label>
@@ -208,7 +227,7 @@ export default function PerfilPage() {
                 </div>
               </div>
             </div>
-
+ 
             {/* Foto de Capa */}
             <div className="space-y-3">
               <span className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
@@ -229,7 +248,7 @@ export default function PerfilPage() {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'capa')}
+                      onChange={(e) => handleImageFileSelect(e, 'capa')}
                       className="hidden"
                     />
                   </label>
@@ -567,6 +586,15 @@ export default function PerfilPage() {
           </button>
         </div>
       </form>
+
+      {/* Image Cropper Modal */}
+      <ImageCropperModal
+        isOpen={cropperOpen}
+        imageSrc={cropperSrc}
+        aspectRatio={cropperAspect}
+        onClose={() => setCropperOpen(false)}
+        onCrop={handleCroppedImage}
+      />
     </div>
   );
 }

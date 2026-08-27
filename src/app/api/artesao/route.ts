@@ -47,16 +47,27 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const artesaos = await prisma.artesao.findMany({
-      where: whereClause,
-      include: {
-        usuario: {
-          select: {
-            email: true,
-            status: true,
-          },
+    let includeObj: any = {
+      usuario: {
+        select: {
+          email: true,
+          status: true,
         },
       },
+    };
+
+    if (adminMode) {
+      includeObj.vendas = {
+        select: {
+          valorVenda: true,
+          contribuicaoFiosa: true,
+        },
+      };
+    }
+
+    const artesaos = await prisma.artesao.findMany({
+      where: whereClause,
+      include: includeObj,
       orderBy: {
         nome: 'asc',
       },

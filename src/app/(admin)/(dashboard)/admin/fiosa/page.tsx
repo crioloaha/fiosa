@@ -19,6 +19,7 @@ import {
   Settings,
   Upload
 } from 'lucide-react';
+import ImageCropperModal from '@/components/ImageCropperModal';
 
 const PRESETS = {
   ORIGINAL: {
@@ -76,6 +77,10 @@ interface Artisan {
     email: string;
     status: string;
   };
+  vendas?: {
+    valorVenda: number;
+    contribuicaoFiosa: number;
+  }[];
 }
 
 interface Category {
@@ -94,6 +99,7 @@ interface Experience {
   localizacao: string;
   duracao: string | null;
   preco: number | null;
+  imagem: string | null;
   status: string;
 }
 
@@ -149,6 +155,24 @@ export default function FiosaAdminPage() {
     contatoTelefone: '',
     contatoEmail: '',
     contatoInstagram: '',
+    sobreResendeCostaTitulo: '',
+    sobreResendeCostaTexto1: '',
+    sobreResendeCostaTexto2: '',
+    sobreResendeCostaImagem: '',
+    visiteIntroTitulo: '',
+    visiteIntroTexto: '',
+    visiteSecao1Titulo: '',
+    visiteSecao1Texto: '',
+    visiteSecao1Imagem: '',
+    visiteSecao2Titulo: '',
+    visiteSecao2Texto: '',
+    visiteSecao2Imagem: '',
+    experienciasIntroTitulo: '',
+    experienciasIntroTexto: '',
+    contatoIntroTitulo: '',
+    contatoIntroTexto: '',
+    ctaTitulo: '',
+    ctaSubtitulo: '',
   });
 
   // Overlays / Forms States
@@ -177,8 +201,59 @@ export default function FiosaAdminPage() {
     duracao: '',
     preco: '',
     contato: '',
+    imagem: '',
     status: 'ATIVO',
   });
+
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperSrc, setCropperSrc] = useState('');
+  const [cropperAspect, setCropperAspect] = useState<'1:1' | '3:1' | '16:9'>('16:9');
+  const [cropperTarget, setCropperTarget] = useState<string>('');
+
+  const handleConfigImageSelect = (e: React.ChangeEvent<HTMLInputElement>, targetField: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const src = URL.createObjectURL(file);
+    setCropperSrc(src);
+    if (targetField === 'logoImagem' || targetField === 'logoTextoImagem') {
+      setCropperAspect('1:1');
+    } else {
+      setCropperAspect('16:9');
+    }
+    setCropperTarget(targetField);
+    setCropperOpen(true);
+  };
+
+  const handleCroppedImageUpload = async (blob: Blob) => {
+    setCropperOpen(false);
+    setSubmitting(true);
+    setErrorMsg('');
+
+    const formData = new FormData();
+    formData.append('file', blob, `config-${cropperTarget}-${Date.now()}.jpg`);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro no upload.');
+
+      if (cropperTarget === 'experiencia') {
+        setExperienceForm((prev) => ({ ...prev, imagem: data.url }));
+      } else {
+        setSettingsForm((prev) => ({ ...prev, [cropperTarget]: data.url }));
+      }
+      showSuccess('Imagem carregada com sucesso.');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro ao carregar imagem.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const loadAllData = () => {
     setLoading(true);
@@ -224,6 +299,24 @@ export default function FiosaAdminPage() {
             contatoTelefone: configData.contatoTelefone || '',
             contatoEmail: configData.contatoEmail || '',
             contatoInstagram: configData.contatoInstagram || '',
+            sobreResendeCostaTitulo: configData.sobreResendeCostaTitulo || '',
+            sobreResendeCostaTexto1: configData.sobreResendeCostaTexto1 || '',
+            sobreResendeCostaTexto2: configData.sobreResendeCostaTexto2 || '',
+            sobreResendeCostaImagem: configData.sobreResendeCostaImagem || '',
+            visiteIntroTitulo: configData.visiteIntroTitulo || '',
+            visiteIntroTexto: configData.visiteIntroTexto || '',
+            visiteSecao1Titulo: configData.visiteSecao1Titulo || '',
+            visiteSecao1Texto: configData.visiteSecao1Texto || '',
+            visiteSecao1Imagem: configData.visiteSecao1Imagem || '',
+            visiteSecao2Titulo: configData.visiteSecao2Titulo || '',
+            visiteSecao2Texto: configData.visiteSecao2Texto || '',
+            visiteSecao2Imagem: configData.visiteSecao2Imagem || '',
+            experienciasIntroTitulo: configData.experienciasIntroTitulo || '',
+            experienciasIntroTexto: configData.experienciasIntroTexto || '',
+            contatoIntroTitulo: configData.contatoIntroTitulo || '',
+            contatoIntroTexto: configData.contatoIntroTexto || '',
+            ctaTitulo: configData.ctaTitulo || '',
+            ctaSubtitulo: configData.ctaSubtitulo || '',
           });
         }
         setLoading(false);
@@ -430,6 +523,7 @@ export default function FiosaAdminPage() {
       duracao: exp.duracao || '',
       preco: exp.preco ? exp.preco.toString() : '',
       contato: (exp as any).contato || '',
+      imagem: exp.imagem || '',
       status: exp.status,
     });
     setEditingExperience(exp.id);
@@ -455,7 +549,7 @@ export default function FiosaAdminPage() {
 
       showSuccess(editingExperience ? 'Experiência atualizada.' : 'Experiência criada com sucesso.');
       setIsExperienceFormOpen(false);
-      setExperienceForm({ titulo: '', descricao: '', localizacao: '', duracao: '', preco: '', contato: '', status: 'ATIVO' });
+      setExperienceForm({ titulo: '', descricao: '', localizacao: '', duracao: '', preco: '', contato: '', imagem: '', status: 'ATIVO' });
       setEditingExperience(null);
       loadAllData();
     } catch (err: any) {
@@ -643,22 +737,30 @@ export default function FiosaAdminPage() {
                           <th className="py-2.5 px-4">Artesão</th>
                           <th className="py-2.5 px-3 text-center">Cliques Whats</th>
                           <th className="py-2.5 px-3 text-right">Visitas Perfil</th>
+                          <th className="py-2.5 px-3 text-right">Faturamento Total</th>
+                          <th className="py-2.5 px-3 text-right text-[#C15C3D]">Repasse FIOSA</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#8D7F73]/10">
                         {[...artisans]
                           .sort((a, b) => b.visualizacoesPerfil - a.visualizacoesPerfil)
                           .slice(0, 5)
-                          .map((a) => (
-                            <tr key={a.id} className="hover:bg-[#F3EFE9]/20">
-                              <td className="py-2 px-4 font-bold text-[#2B2D2F]">
-                                {a.nome}
-                                {a.marca && <span className="block font-sans text-[9px] text-[#8D7F73] font-normal">{a.marca}</span>}
-                              </td>
-                              <td className="py-2 px-3 text-center text-[#606C38] font-bold">{a.cliquesWhats}</td>
-                              <td className="py-2 px-3 text-right font-bold text-[#C15C3D]">{a.visualizacoesPerfil}</td>
-                            </tr>
-                          ))}
+                          .map((a) => {
+                            const faturamento = a.vendas?.reduce((sum, v) => sum + v.valorVenda, 0) || 0;
+                            const repasse = a.vendas?.reduce((sum, v) => sum + v.contribuicaoFiosa, 0) || 0;
+                            return (
+                              <tr key={a.id} className="hover:bg-[#F3EFE9]/20">
+                                <td className="py-2 px-4 font-bold text-[#2B2D2F]">
+                                  {a.nome}
+                                  {a.marca && <span className="block font-sans text-[9px] text-[#8D7F73] font-normal">{a.marca}</span>}
+                                </td>
+                                <td className="py-2 px-3 text-center text-[#606C38] font-bold">{a.cliquesWhats}</td>
+                                <td className="py-2 px-3 text-right font-bold text-[#C15C3D]">{a.visualizacoesPerfil}</td>
+                                <td className="py-2 px-3 text-right font-bold text-[#2B2D2F]">R$ {faturamento.toFixed(2).replace('.', ',')}</td>
+                                <td className="py-2 px-3 text-right font-bold text-[#C15C3D]">R$ {repasse.toFixed(2).replace('.', ',')}</td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
                   </div>
@@ -933,7 +1035,7 @@ export default function FiosaAdminPage() {
                 {!isExperienceFormOpen && (
                   <button
                     onClick={() => {
-                      setExperienceForm({ titulo: '', descricao: '', localizacao: '', duracao: '', preco: '', contato: '', status: 'ATIVO' });
+                      setExperienceForm({ titulo: '', descricao: '', localizacao: '', duracao: '', preco: '', contato: '', imagem: '', status: 'ATIVO' });
                       setEditingExperience(null);
                       setIsExperienceFormOpen(true);
                     }}
@@ -1013,6 +1115,32 @@ export default function FiosaAdminPage() {
                           className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#8D7F73]/30 rounded text-xs"
                           placeholder="Ex: 32999991111"
                         />
+                      </div>
+
+                      <div className="space-y-1 col-span-2">
+                        <label className="block font-bold text-[#2B2D2F]/70 uppercase">Imagem da Vivência</label>
+                        <div className="flex items-center gap-4 mt-1">
+                          <div className="relative h-14 w-24 rounded overflow-hidden border border-[#8D7F73]/40 bg-white shrink-0 shadow-inner">
+                            {experienceForm.imagem ? (
+                              <img src={experienceForm.imagem} alt="Experiência" className="object-cover h-full w-full" />
+                            ) : (
+                              <div className="h-full w-full bg-slate-200" />
+                            )}
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="cursor-pointer inline-flex items-center gap-1.5 bg-[#2B2D2F] hover:bg-[#C15C3D] text-white px-3.5 py-1.5 rounded text-[10px] font-sans font-bold tracking-wider uppercase transition-colors">
+                              <Upload size={12} />
+                              Enviar Capa
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleConfigImageSelect(e, 'experiencia')}
+                                className="hidden"
+                              />
+                            </label>
+                            <p className="text-[9px] text-[#2B2D2F]/55">Formatos aceitos: JPG, PNG (16:9 crop)</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -1138,7 +1266,7 @@ export default function FiosaAdminPage() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => handleSettingImageUpload(e, 'logoImagem')}
+                        onChange={(e) => handleConfigImageSelect(e, 'logoImagem')}
                         className="hidden"
                       />
                     </label>
@@ -1168,7 +1296,7 @@ export default function FiosaAdminPage() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => handleSettingImageUpload(e, 'logoTextoImagem')}
+                        onChange={(e) => handleConfigImageSelect(e, 'logoTextoImagem')}
                         className="hidden"
                       />
                     </label>
@@ -1313,7 +1441,7 @@ export default function FiosaAdminPage() {
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={(e) => handleSettingImageUpload(e, 'heroImagem')}
+                          onChange={(e) => handleConfigImageSelect(e, 'heroImagem')}
                           className="hidden"
                         />
                       </label>
@@ -1378,7 +1506,7 @@ export default function FiosaAdminPage() {
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={(e) => handleSettingImageUpload(e, 'fiosaImagem')}
+                          onChange={(e) => handleConfigImageSelect(e, 'fiosaImagem')}
                           className="hidden"
                         />
                       </label>
@@ -1520,6 +1648,290 @@ export default function FiosaAdminPage() {
                 </div>
               </div>
 
+              {/* Section 5: Dynamic Page Content Editor */}
+              <div className="bg-fiosa-cru border border-fiosa-marrom/20 rounded-xl p-6 shadow-sm space-y-6">
+                <h3 className="font-serif text-lg font-bold border-b border-fiosa-marrom/20 pb-2 text-fiosa-grafite">
+                  Conteúdos das Páginas do Site
+                </h3>
+
+                {/* Sub-section: Home Page: Sobre Resende Costa */}
+                <div className="space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-fiosa-terracota border-b border-fiosa-marrom/10 pb-1">
+                    Home Page: Seção "Sobre Resende Costa"
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Título da Seção</label>
+                      <input
+                        type="text"
+                        required
+                        value={settingsForm.sobreResendeCostaTitulo}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sobreResendeCostaTitulo: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-fiosa-grafite text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Imagem Ilustrativa</label>
+                      <div className="flex gap-3 items-center">
+                        <div className="relative h-10 w-16 rounded overflow-hidden border border-[#8D7F73]/40 bg-white shrink-0">
+                          {settingsForm.sobreResendeCostaImagem ? (
+                            <img src={settingsForm.sobreResendeCostaImagem} alt="Resende Costa" className="object-cover h-full w-full" />
+                          ) : (
+                            <div className="h-full w-full bg-slate-200" />
+                          )}
+                        </div>
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 bg-fiosa-linho border border-fiosa-marrom/30 px-3.5 py-1.5 rounded font-bold uppercase transition-colors hover:bg-fiosa-marrom/10 text-fiosa-grafite text-[10px]">
+                          <Upload size={12} />
+                          Upload
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleConfigImageSelect(e, 'sobreResendeCostaImagem')}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Parágrafo de Texto 1</label>
+                      <textarea
+                        rows={4}
+                        required
+                        value={settingsForm.sobreResendeCostaTexto1}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sobreResendeCostaTexto1: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded leading-relaxed text-xs text-fiosa-grafite"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Parágrafo de Texto 2</label>
+                      <textarea
+                        rows={4}
+                        required
+                        value={settingsForm.sobreResendeCostaTexto2}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sobreResendeCostaTexto2: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded leading-relaxed text-xs text-fiosa-grafite"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub-section: Visite Resende Costa Page */}
+                <div className="space-y-4 pt-4 border-t border-fiosa-marrom/10">
+                  <h4 className="font-serif text-sm font-bold text-fiosa-terracota border-b border-fiosa-marrom/10 pb-1">
+                    Página: Visite Resende Costa
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Título de Introdução</label>
+                      <input
+                        type="text"
+                        required
+                        value={settingsForm.visiteIntroTitulo}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, visiteIntroTitulo: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-fiosa-grafite text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Texto de Introdução</label>
+                      <textarea
+                        rows={2}
+                        required
+                        value={settingsForm.visiteIntroTexto}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, visiteIntroTexto: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded leading-relaxed text-xs text-fiosa-grafite"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    {/* Secao 1 (Tradicao do tear) */}
+                    <div className="space-y-3 bg-[#F3EFE9]/40 p-4 rounded-lg border border-fiosa-marrom/10">
+                      <span className="block font-bold text-fiosa-grafite/80 text-[10px] uppercase">Seção 1: A Tradição do Tear</span>
+                      <div className="space-y-2">
+                        <div className="space-y-1">
+                          <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Título</label>
+                          <input
+                            type="text"
+                            required
+                            value={settingsForm.visiteSecao1Titulo}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, visiteSecao1Titulo: e.target.value })}
+                            className="w-full px-3 py-1.5 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Imagem</label>
+                          <div className="flex gap-2 items-center">
+                            <div className="relative h-8 w-14 rounded overflow-hidden border border-[#8D7F73]/40 bg-white shrink-0">
+                              {settingsForm.visiteSecao1Imagem ? (
+                                <img src={settingsForm.visiteSecao1Imagem} alt="Tear" className="object-cover h-full w-full" />
+                              ) : (
+                                <div className="h-full w-full bg-slate-200" />
+                              )}
+                            </div>
+                            <label className="cursor-pointer inline-flex items-center gap-1 bg-fiosa-linho border border-fiosa-marrom/30 px-3 py-1 rounded font-bold uppercase transition-colors hover:bg-fiosa-marrom/10 text-[9px]">
+                              <Upload size={10} />
+                              Subir
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleConfigImageSelect(e, 'visiteSecao1Imagem')}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Texto</label>
+                          <textarea
+                            rows={3}
+                            required
+                            value={settingsForm.visiteSecao1Texto}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, visiteSecao1Texto: e.target.value })}
+                            className="w-full px-3 py-1.5 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Secao 2 (Artesanato local) */}
+                    <div className="space-y-3 bg-[#F3EFE9]/40 p-4 rounded-lg border border-fiosa-marrom/10">
+                      <span className="block font-bold text-fiosa-grafite/80 text-[10px] uppercase">Seção 2: O Artesanato Local</span>
+                      <div className="space-y-2">
+                        <div className="space-y-1">
+                          <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Título</label>
+                          <input
+                            type="text"
+                            required
+                            value={settingsForm.visiteSecao2Titulo}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, visiteSecao2Titulo: e.target.value })}
+                            className="w-full px-3 py-1.5 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Imagem</label>
+                          <div className="flex gap-2 items-center">
+                            <div className="relative h-8 w-14 rounded overflow-hidden border border-[#8D7F73]/40 bg-white shrink-0">
+                              {settingsForm.visiteSecao2Imagem ? (
+                                <img src={settingsForm.visiteSecao2Imagem} alt="Artesanato" className="object-cover h-full w-full" />
+                              ) : (
+                                <div className="h-full w-full bg-slate-200" />
+                              )}
+                            </div>
+                            <label className="cursor-pointer inline-flex items-center gap-1 bg-fiosa-linho border border-fiosa-marrom/30 px-3 py-1 rounded font-bold uppercase transition-colors hover:bg-fiosa-marrom/10 text-[9px]">
+                              <Upload size={10} />
+                              Subir
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleConfigImageSelect(e, 'visiteSecao2Imagem')}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Texto</label>
+                          <textarea
+                            rows={3}
+                            required
+                            value={settingsForm.visiteSecao2Texto}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, visiteSecao2Texto: e.target.value })}
+                            className="w-full px-3 py-1.5 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub-section: Experiencias and Contato Page Intros */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-fiosa-marrom/10">
+                  <div className="space-y-3 bg-[#F3EFE9]/40 p-4 rounded-lg border border-fiosa-marrom/10">
+                    <span className="block font-bold text-fiosa-grafite/80 text-[10px] uppercase">Página: Experiências (Introdução)</span>
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Título de Entrada</label>
+                        <input
+                          type="text"
+                          required
+                          value={settingsForm.experienciasIntroTitulo}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, experienciasIntroTitulo: e.target.value })}
+                          className="w-full px-3 py-1.5 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Texto de Entrada</label>
+                        <textarea
+                          rows={3}
+                          required
+                          value={settingsForm.experienciasIntroTexto}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, experienciasIntroTexto: e.target.value })}
+                          className="w-full px-3 py-1.5 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-xs leading-relaxed"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 bg-[#F3EFE9]/40 p-4 rounded-lg border border-fiosa-marrom/10">
+                    <span className="block font-bold text-fiosa-grafite/80 text-[10px] uppercase">Página: Fale Conosco (Introdução)</span>
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Título de Entrada</label>
+                        <input
+                          type="text"
+                          required
+                          value={settingsForm.contatoIntroTitulo}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, contatoIntroTitulo: e.target.value })}
+                          className="w-full px-3 py-1.5 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block font-bold text-fiosa-grafite/60 uppercase text-[9px]">Texto de Entrada</label>
+                        <textarea
+                          rows={3}
+                          required
+                          value={settingsForm.contatoIntroTexto}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, contatoIntroTexto: e.target.value })}
+                          className="w-full px-3 py-1.5 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-xs leading-relaxed"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub-section: Home CTA Final */}
+                <div className="space-y-4 pt-4 border-t border-fiosa-marrom/10">
+                  <h4 className="font-serif text-sm font-bold text-fiosa-terracota border-b border-fiosa-marrom/10 pb-1">
+                    Home Page: Chamada Final (CTA)
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Título do Bloco</label>
+                      <input
+                        type="text"
+                        required
+                        value={settingsForm.ctaTitulo}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, ctaTitulo: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-fiosa-grafite text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Subtítulo / Descrição</label>
+                      <input
+                        type="text"
+                        required
+                        value={settingsForm.ctaSubtitulo}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, ctaSubtitulo: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-fiosa-grafite text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
               {/* Form Action buttons */}
               <div className="flex gap-2 justify-end border-t border-fiosa-marrom/20 pt-4">
                 <button
@@ -1534,6 +1946,15 @@ export default function FiosaAdminPage() {
           )}
         </>
       )}
+
+      {/* Image Cropper Modal */}
+      <ImageCropperModal
+        isOpen={cropperOpen}
+        imageSrc={cropperSrc}
+        aspectRatio={cropperAspect}
+        onClose={() => setCropperOpen(false)}
+        onCrop={handleCroppedImageUpload}
+      />
     </div>
   );
 }

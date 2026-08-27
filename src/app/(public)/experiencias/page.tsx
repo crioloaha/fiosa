@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Compass, Clock, Landmark, MessageSquare } from 'lucide-react';
 import type { Metadata } from 'next';
+import { getConfig } from '@/lib/config';
 
 export const revalidate = 0; // Disable cache for dynamic edits
 
@@ -16,6 +17,7 @@ export default async function ExperienciasPage() {
     where: { status: 'ATIVO' },
     orderBy: { createdAt: 'desc' },
   });
+  const config = await getConfig();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
@@ -25,10 +27,10 @@ export default async function ExperienciasPage() {
           Vivências Locais
         </span>
         <h1 className="font-serif text-4xl md:text-5xl text-fiosa-grafite">
-          Experiências & Turismo Cultural
+          {config.experienciasIntroTitulo}
         </h1>
         <p className="font-sans text-sm text-fiosa-grafite/70 leading-relaxed">
-          Participe de vivências exclusivas com os artesãos de Resende Costa. Descubra a tradição secular do tear manual, faça oficinas práticas de tecelagem ou tingimento natural, e conheça a nossa cultura de perto.
+          {config.experienciasIntroTexto}
         </p>
       </div>
 

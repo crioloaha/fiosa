@@ -2,25 +2,26 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Compass, UtensilsCrossed, Hotel, Navigation } from 'lucide-react';
 import type { Metadata } from 'next';
+import { getConfig } from '@/lib/config';
 
 export const metadata: Metadata = {
   title: 'Guia de Turismo de Resende Costa - Capital do Tear | FIOSA',
   description: 'Descubra a história da tradição secular do tear, saiba onde comprar artesanato direto do produtor, onde comer e se hospedar em Resende Costa, Minas Gerais.',
 };
 
-export default function VisiteResendeCostaPage() {
+export default async function VisiteResendeCostaPage() {
+  const config = await getConfig();
+
   const sections = [
     {
-      title: 'A Tradição do Tear',
-      image: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?w=600&q=80',
-      description:
-        'A tradição do tear em Resende Costa remonta ao século XVIII, trazida pelos colonizadores portugueses e mantida viva por gerações de tecelões locais. Originalmente focado na produção de colchas e tecidos utilitários pesados, hoje o tear se funde com o design brasileiro, gerando artigos de decoração valorizados internacionalmente.',
+      title: config.visiteSecao1Titulo,
+      image: config.visiteSecao1Imagem,
+      description: config.visiteSecao1Texto,
     },
     {
-      title: 'O Artesanato Local',
-      image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&q=80',
-      description:
-        'Ao caminhar pelas ruas de Resende Costa, o visitante depara-se com fachadas cobertas de cores vivas e texturas rústicas de algodão cru. É uma galeria de arte a céu aberto. São dezenas de ateliês familiares vendendo tapetes, caminhos de mesa, mantas para sofás, almofadas e cortinas diretamente ao consumidor.',
+      title: config.visiteSecao2Titulo,
+      image: config.visiteSecao2Imagem,
+      description: config.visiteSecao2Texto,
     },
   ];
 
@@ -53,9 +54,9 @@ export default function VisiteResendeCostaPage() {
 
       {/* Intro Description */}
       <section className="max-w-4xl mx-auto px-4 text-center space-y-6">
-        <h2 className="font-serif text-3xl text-fiosa-grafite">Conheça a Nossa Cidade</h2>
+        <h2 className="font-serif text-3xl text-fiosa-grafite">{config.visiteIntroTitulo}</h2>
         <p className="font-sans text-sm text-fiosa-grafite/75 leading-relaxed">
-          Resende Costa está localizada no Circuito Turístico Trilha dos Inconfidentes, no Campo das Vertentes. Vizinha das históricas São João del-Rei e Tiradentes, a cidade destaca-se nacionalmente pela produção têxtil artesanal. Aqui, quase todas as famílias possuem um laço direto ou indireto com o tear manual. É um refúgio acolhedor onde a hospitalidade mineira e a cultura popular estão em cada esquina.
+          {config.visiteIntroTexto}
         </p>
       </section>
 

@@ -4,7 +4,9 @@ export default function Footer({ config }: { config: any }) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-fiosa-grafite text-fiosa-linho border-t-2 border-fiosa-marrom/30 pt-16 pb-8">
+    <footer className="bg-fiosa-grafite text-fiosa-linho relative pt-16 pb-8">
+      {/* Loom Fringe Detail */}
+      <div className="absolute top-0 inset-x-0 franja-horizontal opacity-85" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand Concept */}
