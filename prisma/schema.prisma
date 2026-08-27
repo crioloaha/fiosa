@@ -1,0 +1,192 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  senha     String
+  tipo      String   // "ADMIN" | "ARTESAO"
+  status    String   // "ATIVO" | "INATIVO"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artesao   Artesao?
+}
+
+model Artesao {
+  id                  String   @id @default(uuid())
+  usuarioId           String   @unique
+  usuario             Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nome                String
+  marca               String?
+  slug                String   @unique
+  bio                 String?
+  historia            String?
+  foto                String?  // URL/path to avatar image
+  capa                String?  // URL/path to banner image
+  whatsapp            String?
+  telefone            String?
+  emailContato        String?
+  endereco            String?
+  cidade              String   @default("Resende Costa")
+  cep                 String?
+  localizacaoMapa     String?
+  instagram           String?
+  facebook            String?
+  tiktok              String?
+  website             String?
+  perfilAtivo         Boolean  @default(true)
+  mostrarTelefone     Boolean  @default(true)
+  mostrarEndereco     Boolean  @default(true)
+  mostrarPreco        Boolean  @default(true)
+  aceitarWhats        Boolean  @default(true)
+  visualizacoesPerfil Int      @default(0)
+  cliquesWhats        Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  produtos            Produto[]
+  vendas              Venda[]
+  categorias          CategoriaArtesao[]
+}
+
+model Categoria {
+  id             String   @id @default(uuid())
+  nome           String   @unique
+  slug           String   @unique
+  descricao      String?
+  imagem         String?
+  percentualFiosa Float   @default(10.0)
+  status         String   @default("ATIVO") // "ATIVO" | "INATIVO"
+  createdAt      DateTime @default(now())
+  
+  produtos       Produto[]
+  artesaos       CategoriaArtesao[]
+}
+
+model CategoriaArtesao {
+  artesaoId   String
+  categoriaId String
+  artesao     Artesao   @relation(fields: [artesaoId], references: [id], onDelete: Cascade)
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@id([artesaoId, categoriaId])
+}
+
+model Produto {
+  id              String   @id @default(uuid())
+  artesaoId       String
+  artesao         Artesao  @relation(fields: [artesaoId], references: [id], onDelete: Cascade)
+  categoriaId     String
+  categoria       Categoria @relation(fields: [categoriaId], references: [id])
+  nome            String
+  slug            String   @unique
+  descricao       String?
+  preco           Float?
+  custo           Float?   // Product CVM for financial tracking
+  fotos           String   // JSON string of array: ["img1.jpg", "img2.jpg"]
+  materiais       String?
+  tecnica         String?
+  dimensoes       String?
+  peso            Float?
+  disponibilidade String   @default("DISPONIVEL") // "DISPONIVEL" | "SOB_ENCOMENDA" | "ESGOTADO"
+  status          String   @default("PUBLICADO")  // "RASCUNHO" | "PUBLICADO" | "OCULTO"
+  codigo          String?  // SKU
+  tags            String?
+  visualizacoes   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  vendas          Venda[]
+
+  @@index([artesaoId])
+  @@index([categoriaId])
+  @@index([status])
+}
+
+model Venda {
+  id               String   @id @default(uuid())
+  artesaoId        String
+  artesao          Artesao  @relation(fields: [artesaoId], references: [id], onDelete: Cascade)
+  produtoId        String
+  produto          Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  quantidade       Int      @default(1)
+  valorVenda       Float
+  custoTotal       Float
+  contribuicaoFiosa Float
+  dataVenda        DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  @@index([artesaoId])
+  @@index([produtoId])
+}
+
+model Experiencia {
+  id           String   @id @default(uuid())
+  titulo       String
+  slug         String   @unique
+  descricao    String
+  imagem       String?
+  localizacao  String
+  duracao      String?
+  preco        Float?
+  contato      String?
+  linkExterno  String?
+  status       String   @default("ATIVO") // "ATIVO" | "INATIVO"
+  createdAt    DateTime @default(now())
+}
+
+model Configuracao {
+  id                 String   @id @default("global")
+  
+  // Header / Logo
+  logoTexto          String   @default("FIOSA")
+  logoSubtitulo      String   @default("LOJA COLABORATIVA")
+  logoImagem         String?
+  logoTextoImagem    String?
+  
+  // Hero Section
+  heroTag            String   @default("Tradição & Design")
+  heroTitulo         String   @default("FIOS QUE CONTAM\nHISTÓRIAS.")
+  heroSubtitulo      String   @default("Uma loja colaborativa que reúne artesãos de Resende Costa e transforma tradição em arte, design contemporâneo e experiências.")
+  heroImagem         String   @default("https://images.unsplash.com/photo-1590736969955-71cc94801759?w=1600&q=80")
+  
+  // A FIOSA Section
+  fiosaTag           String   @default("Nosso Propósito")
+  fiosaTitulo        String   @default("A união de fios, saberes e pessoas de Resende Costa.")
+  fiosaTexto1        String   @default("A FIOSA nasceu com o compromisso de fortalecer o artesanato de Resende Costa, Minas Gerais. Funcionamos como uma ponte que conecta a rica herança cultural do tear com o design contemporâneo e a decoração de interiores.")
+  fiosaTexto2        String   @default("Como uma loja colaborativa, apoiamos diretamente a economia local. Cada artesão cadastrado tem total controle sobre seu catálogo, define seus preços e recebe o contato direto de clientes interessados, impulsionando a venda sem intermediários e valorizando a autoria de cada trama.")
+  fiosaImagem        String   @default("https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&q=80")
+  
+  // Cores
+  paletaNome         String   @default("ORIGINAL") // "ORIGINAL" | "TERRA" | "OCEANO" | "FLORESTA" | "MONOCROMATICA" | "PERSONALIZADA"
+  corPrimaria        String   @default("#C15C3D")
+  corSecundaria      String   @default("#606C38")
+  corFundo           String   @default("#FDFBF7")
+  corFundoAlternativo String   @default("#F3EFE9")
+  corTexto           String   @default("#2B2D2F")
+  corBorda           String   @default("#8D7F73")
+  
+  // Rodapé e Contatos
+  rodapeSlogan       String   @default("Fios que conectam pessoas, histórias e lugares.")
+  rodapeDescricao    String   @default("A FIOSA é uma vitrine e espaço colaborativo que une artesãos de Resende Costa/MG, promovendo o design brasileiro, a tradição secular do tear e a economia criativa local.")
+  contatoEndereco    String   @default("Rua São Sebastião, 100 - Centro\nResende Costa - MG, CEP 36340-000")
+  contatoAtendimento String   @default("Segunda a Sábado: 09h às 18h\nDomingos: 09h às 14h")
+  contatoWhatsapp    String   @default("(32) 99999-1111")
+  contatoTelefone    String   @default("(32) 3354-1111")
+  contatoEmail       String   @default("contato@fiosa.com.br")
+  contatoInstagram   String   @default("fiosa.colaborativa")
+
+  updatedAt          DateTime @updatedAt
+}
+
