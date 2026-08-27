@@ -28,7 +28,7 @@ export async function generateMetadata({
     return { title: 'Produto Não Encontrado | FIOSA' };
   }
 
-  const title = `${produto.nome} | Tecelagem ${produto.artesao.nome} - FIOSA`;
+  const title = `${produto.nome} — Resende Costa | FIOSA`;
   const description = `Compre ${produto.nome} no catálogo coletivo da FIOSA. Tecido artesanalmente em tear manual de Resende Costa por ${produto.artesao.nome}. Dimensões: ${produto.dimensoes || 'Sob consulta'}.`;
   
   const fotosArray = JSON.parse(produto.fotos || '[]');
@@ -90,6 +90,59 @@ export default async function ProdutoDetailPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'Product',
+                '@id': `https://fiosa.com.br/produto/${produto.slug}#produto`,
+                'name': produto.nome,
+                'image': fotosArray[0],
+                'description': produto.descricao || '',
+                'offers': produto.preco ? {
+                  '@type': 'Offer',
+                  'price': produto.preco,
+                  'priceCurrency': 'BRL',
+                  'availability': produto.disponibilidade === 'DISPONIVEL' ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder'
+                } : undefined,
+                'brand': {
+                  '@type': 'Brand',
+                  'name': produto.artesao.marca || produto.artesao.nome
+                }
+              },
+              {
+                '@type': 'BreadcrumbList',
+                '@id': `https://fiosa.com.br/produto/${produto.slug}#breadcrumb`,
+                'itemListElement': [
+                  {
+                    '@type': 'ListItem',
+                    'position': 1,
+                    'name': 'Início',
+                    'item': 'https://fiosa.com.br'
+                  },
+                  {
+                    '@type': 'ListItem',
+                    'position': 2,
+                    'name': 'Produtos',
+                    'item': 'https://fiosa.com.br/produtos'
+                  },
+                  {
+                    '@type': 'ListItem',
+                    'position': 3,
+                    'name': produto.nome,
+                    'item': `https://fiosa.com.br/produto/${produto.slug}`
+                  }
+                ]
+              }
+            ]
+          })
+        }}
+      />
+
       {/* Client-side analytics tracker */}
       <AnalyticsTracker id={produto.id} type="product" />
 

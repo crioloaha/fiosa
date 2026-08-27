@@ -2,8 +2,14 @@ import { prisma } from '@/lib/prisma';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Compass, Clock, Landmark, MessageSquare } from 'lucide-react';
+import type { Metadata } from 'next';
 
 export const revalidate = 0; // Disable cache for dynamic edits
+
+export const metadata: Metadata = {
+  title: 'Experiências e Turismo Cultural em Resende Costa | FIOSA',
+  description: 'Vivencie a tradição têxtil de Resende Costa de perto. Faça oficinas de tear, tingimento natural com artesãos e explore a cultura mineira.',
+};
 
 export default async function ExperienciasPage() {
   const experiences = await prisma.experiencia.findMany({

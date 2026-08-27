@@ -23,8 +23,8 @@ export async function generateMetadata({
     return { title: 'Artesão Não Encontrado | FIOSA' };
   }
 
-  const title = `Tecelagem ${artesao.nome} | Artesão de Resende Costa - FIOSA`;
-  const description = `Conheça a história e o catálogo de tecelagem de ${artesao.nome} (${artesao.marca || 'Artesão Local'}), tecendo tapetes, mantas e passadeiras sob encomenda em Resende Costa, Minas Gerais.`;
+  const title = `${artesao.nome} — Artesanato em Tear Manual | FIOSA`;
+  const description = `Conheça ${artesao.nome}, artesã(o) de Resende Costa, e seus trabalhos produzidos artesanalmente em tear manual. ${artesao.bio || ''}`;
   const mainFoto = artesao.foto || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop';
 
   return {
@@ -91,6 +91,60 @@ export default async function ArtesaoProfilePage({
 
   return (
     <div className="pb-24">
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'Person',
+                '@id': `https://fiosa.com.br/artesao/${artesao.slug}#artesao`,
+                'name': artesao.nome,
+                'description': artesao.bio || '',
+                'image': artesao.foto || '',
+                'jobTitle': 'Artesão',
+                'address': {
+                  '@type': 'PostalAddress',
+                  'addressLocality': 'Resende Costa',
+                  'addressRegion': 'MG',
+                  'addressCountry': 'BR'
+                },
+                'brand': {
+                  '@type': 'Brand',
+                  'name': artesao.marca || artesao.nome
+                }
+              },
+              {
+                '@type': 'BreadcrumbList',
+                '@id': `https://fiosa.com.br/artesao/${artesao.slug}#breadcrumb`,
+                'itemListElement': [
+                  {
+                    '@type': 'ListItem',
+                    'position': 1,
+                    'name': 'Início',
+                    'item': 'https://fiosa.com.br'
+                  },
+                  {
+                    '@type': 'ListItem',
+                    'position': 2,
+                    'name': 'Artesãos',
+                    'item': 'https://fiosa.com.br/artesaos'
+                  },
+                  {
+                    '@type': 'ListItem',
+                    'position': 3,
+                    'name': artesao.nome,
+                    'item': `https://fiosa.com.br/artesao/${artesao.slug}`
+                  }
+                ]
+              }
+            ]
+          })
+        }}
+      />
+
       {/* Client-side analytics tracker */}
       <AnalyticsTracker slug={slug} type="profile" />
 

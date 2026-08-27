@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Compass, UtensilsCrossed, Hotel, Navigation } from 'lucide-react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Guia de Turismo de Resende Costa - Capital do Tear | FIOSA',
+  description: 'Descubra a história da tradição secular do tear, saiba onde comprar artesanato direto do produtor, onde comer e se hospedar em Resende Costa, Minas Gerais.',
+};
 
 export default function VisiteResendeCostaPage() {
   const sections = [

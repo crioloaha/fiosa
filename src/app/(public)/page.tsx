@@ -37,6 +37,50 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-24 pb-20">
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'Organization',
+                '@id': 'https://fiosa.com.br/#organization',
+                'name': config.logoTexto,
+                'url': 'https://fiosa.com.br',
+                'logo': config.logoImagem || 'https://fiosa.com.br/favicon.ico',
+                'description': config.rodapeDescricao,
+                'address': {
+                  '@type': 'PostalAddress',
+                  'streetAddress': 'Rua São Sebastião, 100 - Centro',
+                  'addressLocality': 'Resende Costa',
+                  'addressRegion': 'MG',
+                  'postalCode': '36340-000',
+                  'addressCountry': 'BR'
+                },
+                'contactPoint': {
+                  '@type': 'ContactPoint',
+                  'telephone': config.contatoTelefone || '(32) 3354-1111',
+                  'contactType': 'customer service',
+                  'availableLanguage': 'Portuguese'
+                }
+              },
+              {
+                '@type': 'WebSite',
+                '@id': 'https://fiosa.com.br/#website',
+                'url': 'https://fiosa.com.br',
+                'name': config.logoTexto,
+                'description': config.rodapeDescricao,
+                'publisher': {
+                  '@id': 'https://fiosa.com.br/#organization'
+                }
+              }
+            ]
+          })
+        }}
+      />
+
       {/* 1. Hero Principal */}
       <section className="relative h-[85vh] flex items-center justify-center overflow-hidden bg-fiosa-grafite">
         {/* Background Image with Tint */}
