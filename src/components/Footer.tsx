@@ -13,9 +13,11 @@ export default function Footer({ config }: { config: any }) {
               <span className="font-serif text-3xl font-bold tracking-widest text-fiosa-cru">
                 {config?.logoTexto || 'FIOSA'}
               </span>
-              <span className="text-[10px] tracking-[0.2em] font-sans text-fiosa-marrom uppercase -mt-1">
-                {config?.logoSubtitulo || 'LOJA COLABORATIVA'}
-              </span>
+              {config?.logoSubtitulo && config.logoSubtitulo.trim() !== '' && (
+                <span className="text-[10px] tracking-[0.2em] font-sans text-fiosa-marrom uppercase -mt-1">
+                  {config.logoSubtitulo}
+                </span>
+              )}
             </Link>
             <p className="font-serif text-base text-fiosa-linho/80 italic max-w-sm mb-4">
               "{config?.rodapeSlogan || 'Fios que conectam pessoas, histórias e lugares.'}"

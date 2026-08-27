@@ -43,44 +43,59 @@ export default function Header({ config }: { config: any }) {
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center gap-3">
-              {config?.logoImagem && (
-                <img
-                  src={config.logoImagem}
-                  alt="Marca FIOSA"
-                  className="h-10 w-10 md:h-12 md:w-12 object-contain shrink-0"
-                />
-              )}
-              <div className="flex flex-col justify-center">
-                {config?.logoTextoImagem ? (
-                  <img
-                    src={config.logoTextoImagem}
-                    alt={config.logoTexto || 'FIOSA'}
-                    className="h-6 sm:h-8 w-auto object-contain"
-                  />
-                ) : (
-                  <span className="font-serif text-xl sm:text-2xl font-bold tracking-widest text-fiosa-grafite leading-none">
-                    {config?.logoTexto || 'FIOSA'}
-                  </span>
-                )}
-                {/* Subtítulo em 2 linhas com espaçamento do título */}
-                <div className="mt-1.5 flex flex-col font-sans text-fiosa-marrom uppercase leading-tight">
-                  {(() => {
-                    const sub = config?.logoSubtitulo || 'LOJA COLABORATIVA';
-                    const parts = sub.split(/ARTESÃOS /);
-                    if (parts.length === 2) {
-                      return (
-                        <>
-                          <span className="text-[8px] tracking-[0.13em]">{parts[0]}ARTESÃOS</span>
-                          <span className="text-[9px] tracking-[0.42em]">{parts[1]}</span>
-                        </>
-                      );
-                    }
-                    return <span className="text-[8px] tracking-[0.13em]">{sub}</span>;
-                  })()}
-                </div>
-              </div>
-            </Link>
+            {(() => {
+              const hasSubtitle = !!(config?.logoSubtitulo && config.logoSubtitulo.trim() !== '');
+              return (
+                <Link href="/" className="flex items-center gap-3">
+                  {config?.logoImagem && (
+                    <img
+                      src={config.logoImagem}
+                      alt="Marca FIOSA"
+                      className={`object-contain shrink-0 transition-all duration-300 ${
+                        hasSubtitle ? 'h-10 w-10 md:h-12 md:w-12' : 'h-11 w-11 md:h-14 md:w-14'
+                      }`}
+                    />
+                  )}
+                  <div className="flex flex-col justify-center">
+                    {config?.logoTextoImagem ? (
+                      <img
+                        src={config.logoTextoImagem}
+                        alt={config.logoTexto || 'FIOSA'}
+                        className={`w-auto object-contain transition-all duration-300 ${
+                          hasSubtitle ? 'h-6 sm:h-8' : 'h-7 sm:h-9'
+                        }`}
+                      />
+                    ) : (
+                      <span
+                        className={`font-serif font-bold tracking-widest text-fiosa-grafite leading-none transition-all duration-300 ${
+                          hasSubtitle ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
+                        }`}
+                      >
+                        {config?.logoTexto || 'FIOSA'}
+                      </span>
+                    )}
+                    {/* Subtítulo com espaçamento refinado */}
+                    {hasSubtitle && (
+                      <div className="mt-0.5 flex flex-col font-sans text-fiosa-marrom uppercase leading-tight">
+                        {(() => {
+                          const sub = config.logoSubtitulo;
+                          const parts = sub.split(/ARTESÃOS /);
+                          if (parts.length === 2) {
+                            return (
+                              <>
+                                <span className="text-[8px] tracking-[0.13em]">{parts[0]}ARTESÃOS</span>
+                                <span className="text-[9px] tracking-[0.42em]">{parts[1]}</span>
+                              </>
+                            );
+                          }
+                          return <span className="text-[8px] tracking-[0.13em]">{sub}</span>;
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              );
+            })()}
           </div>
 
           {/* Desktop Navigation */}

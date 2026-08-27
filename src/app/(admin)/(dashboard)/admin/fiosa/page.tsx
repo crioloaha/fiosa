@@ -1114,11 +1114,13 @@ export default function FiosaAdminPage() {
                     <label className="block font-bold text-fiosa-grafite/70 uppercase">Slogan da Logo (Subtítulo)</label>
                     <input
                       type="text"
-                      required
                       value={settingsForm.logoSubtitulo}
                       onChange={(e) => setSettingsForm({ ...settingsForm, logoSubtitulo: e.target.value })}
                       className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-fiosa-grafite text-xs"
                     />
+                    <p className="text-[10px] text-fiosa-grafite/50 italic mt-0.5">
+                      Deixe em branco para ocultar o descritivo e exibir o logotipo em layout único e ampliado.
+                    </p>
                   </div>
                 </div>
 

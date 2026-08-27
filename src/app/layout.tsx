@@ -5,8 +5,9 @@ import { getConfig } from '@/lib/config';
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getConfig();
   const favicon = config.logoImagem || '/favicon.ico';
+  const hasSub = !!(config.logoSubtitulo && config.logoSubtitulo.trim() !== '');
   return {
-    title: `${config.logoTexto} — ${config.logoSubtitulo}`,
+    title: hasSub ? `${config.logoTexto} — ${config.logoSubtitulo}` : config.logoTexto,
     description: config.rodapeDescricao,
     icons: {
       icon: favicon,
