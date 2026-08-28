@@ -47,10 +47,17 @@ export async function POST(request: NextRequest) {
     const filePath = path.join(uploadDir, filename);
 
     // Write file
-    await writeFile(filePath, buffer);
-
-    const publicUrl = `/uploads/${filename}`;
-    return NextResponse.json({ url: publicUrl });
+    try {
+      await writeFile(filePath, buffer);
+      const publicUrl = `/uploads/${filename}`;
+      return NextResponse.json({ url: publicUrl });
+    } catch (writeError: any) {
+      console.warn('Escrita no sistema de arquivos falhou (ambiente read-only como Vercel). Gerando base64 data URL como fallback:', writeError.message);
+      
+      const base64 = buffer.toString('base64');
+      const dataUrl = `data:${file.type || 'image/jpeg'};base64,${base64}`;
+      return NextResponse.json({ url: dataUrl });
+    }
   } catch (error) {
     console.error('Erro no upload de imagem:', error);
     return NextResponse.json({ error: 'Erro ao fazer upload da imagem.' }, { status: 500 });
