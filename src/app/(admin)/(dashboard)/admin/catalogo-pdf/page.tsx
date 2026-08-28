@@ -563,26 +563,26 @@ export default function CatalogoPdfPage() {
           rightColHeight += specs.length * 6.5 + 6;
         }
 
-        // Height of the primary block (Image side-by-side with Info)
-        const mainBlockH = Math.max(imgSize, rightColHeight + 5);
-
-        // 2. Calculate description block ("SOBRE ESTA PEÇA") with dynamic height
+        // 2. Calculate description block ("SOBRE ESTA PEÇA") inside right column
         let descBlockH = 0;
         let descLines: string[] = [];
-        const descBoxW = PAGE_W - 16 - MARGIN; // 176mm
-        const descTextW = descBoxW - 10; // 166mm (paddings)
-
         if (options.showDescription && p.descricao) {
-          descLines = doc.splitTextToSize(p.descricao, descTextW);
-          // 4mm header, 4.2mm per text line, 6mm dynamic box margins
-          descBlockH = 5 + descLines.length * 4.2 + 6;
+          descLines = doc.splitTextToSize(p.descricao, mainW - 8);
+          // 5mm header, 4.2mm per text line, 5mm dynamic box margins
+          descBlockH = 5 + descLines.length * 4.2 + 5;
+          rightColHeight += descBlockH + 4; // Spacing before description block
         }
 
-        const buttonBlockH = 9; // 7mm button + 2mm top margin
+        // Button block height: 7.5mm (button) + 3mm top spacing
+        const buttonBlockH = 10.5;
+        rightColHeight += buttonBlockH;
+
+        // Height of the primary block (Image side-by-side with Info)
+        const mainBlockH = Math.max(imgSize, rightColHeight + 5);
         const dividerH = 8; // Margin between products on the same page
 
         // Total vertical height required by this product
-        const totalProductH = mainBlockH + (descBlockH > 0 ? descBlockH + 4 : 0) + buttonBlockH + dividerH;
+        const totalProductH = mainBlockH + dividerH;
 
         // If it doesn't fit on the page, create a new page
         if (yCursor + totalProductH > Y_MAX && yCursor > Y_START) {
@@ -705,38 +705,37 @@ export default function CatalogoPdfPage() {
           });
         }
 
-        yCursor = currentY + mainBlockH;
-
-        // ── Render Dynamic Description Box below Image ──
+        // ── Render Dynamic Description Box inside Right Column ──
         if (descBlockH > 0 && descLines.length > 0) {
-          yCursor += 3;
-          let detailY = yCursor;
+          ty += 2;
 
           // Title
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(6.5);
           setColor(doc, COLORS.mid);
-          doc.text('SOBRE ESTA PEÇA', 16, detailY + 4);
+          doc.text('SOBRE ESTA PEÇA', mainX, ty);
+          ty += 4;
 
-          // Dynamic Box (Height matches the description text lines perfectly)
+          // Dynamic Box (width is mainW)
           setFill(doc, COLORS.light);
-          doc.roundedRect(16, detailY + 6, descBoxW, descLines.length * 4.2 + 5, 2, 2, 'F');
+          const boxH = descLines.length * 4.2 + 5;
+          doc.roundedRect(mainX, ty - 2, mainW, boxH, 1.5, 1.5, 'F');
 
           // Text content
           doc.setFont('helvetica', 'normal');
-          doc.setFontSize(7.5);
+          doc.setFontSize(7.2);
           setColor(doc, COLORS.dark);
-          doc.text(descLines, 21, detailY + 11, { lineHeightFactor: 1.4 });
+          doc.text(descLines, mainX + 4, ty + 2.5, { lineHeightFactor: 1.4 });
 
-          yCursor += descBlockH;
+          ty += boxH - 1;
         }
 
-        // ── Render Button "Ver no catálogo virtual" ──
-        yCursor += 2;
-        const btnX = 16;
-        const btnY = yCursor;
-        const btnW = 60; // 60mm wide button
-        const btnH = 7;  // 7mm high button
+        // ── Render Button "Ver no catálogo virtual" inside Right Column ──
+        ty += 3;
+        const btnX = mainX;
+        const btnY = ty;
+        const btnW = mainW; // full column width
+        const btnH = 7.5;   // 7.5mm high button
 
         // Draw rounded filled rect for button
         setFill(doc, COLORS.terracota);
@@ -749,12 +748,14 @@ export default function CatalogoPdfPage() {
         const btnText = 'Ver no Catálogo Virtual ↗';
         const textWidth = doc.getTextWidth(btnText);
         const textX = btnX + (btnW - textWidth) / 2;
-        doc.text(btnText, textX, btnY + 4.6);
+        doc.text(btnText, textX, btnY + 4.8);
 
         // Add link over the entire button area
         doc.link(btnX, btnY, btnW, btnH, { url: `${FIOSA_URL}/produto/${p.slug}` });
 
-        yCursor += btnH;
+        ty += btnH;
+
+        yCursor = currentY + mainBlockH;
 
         // Apply bottom spacing
         yCursor += dividerH;
@@ -762,18 +763,32 @@ export default function CatalogoPdfPage() {
         // Draw dotted/subtle separation line if the next item fits on the same page
         if (i < productsForPDF.length - 1) {
           const nextProduct = productsForPDF[i + 1];
+          let nextRightColH = 0;
+          if (options.showCategory) nextRightColH += 10;
+          const nextNameLines = doc.splitTextToSize(nextProduct.nome, mainW);
+          nextRightColH += nextNameLines.slice(0, 2).length * 6.5 + 2;
+          if (isAdmin && selectedArtesaos.length > 1) nextRightColH += 6;
+          if (options.showValue) nextRightColH += 8;
+
           let nextSpecsCount = 0;
           if (options.showTechnique && nextProduct.tecnica) nextSpecsCount++;
           if (options.showMaterials && nextProduct.materiais) nextSpecsCount++;
           if (options.showDimensions && nextProduct.dimensoes) nextSpecsCount++;
-
-          const nextMainH = Math.max(imgSize, (options.showCategory ? 10 : 0) + 16 + (nextSpecsCount * 6 + 6));
-          let nextDescH = 0;
-          if (options.showDescription && nextProduct.descricao) {
-            const nextLines = doc.splitTextToSize(nextProduct.descricao, descTextW);
-            nextDescH = 5 + nextLines.length * 4.2 + 6;
+          if (nextSpecsCount > 0) {
+            nextRightColH += nextSpecsCount * 6.5 + 6;
           }
-          const nextTotalH = nextMainH + (nextDescH > 0 ? nextDescH + 4 : 0) + 9 + dividerH;
+
+          let nextDescLines: string[] = [];
+          if (options.showDescription && nextProduct.descricao) {
+            nextDescLines = doc.splitTextToSize(nextProduct.descricao, mainW - 8);
+            nextRightColH += (5 + nextDescLines.length * 4.2 + 5) + 4;
+          }
+
+          // Button height (10.5mm)
+          nextRightColH += 10.5;
+
+          const nextMainH = Math.max(imgSize, nextRightColH + 5);
+          const nextTotalH = nextMainH + dividerH;
 
           // Dotted divisor line
           if (yCursor + nextTotalH <= Y_MAX) {
