@@ -4,7 +4,7 @@ import { getConfig } from '@/lib/config';
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getConfig();
-  const favicon = config.logoImagem || '/favicon.ico';
+  const favicon = config.favicon || '/favicon.ico';
   const hasSub = !!(config.logoSubtitulo && config.logoSubtitulo.trim() !== '');
   return {
     title: hasSub ? `${config.logoTexto} — ${config.logoSubtitulo}` : config.logoTexto,
@@ -23,7 +23,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const config = await getConfig();
-  const favicon = config.logoImagem || '/favicon.ico';
+  const favicon = config.favicon || '/favicon.ico';
 
   return (
     <html lang="pt-BR" className="h-full antialiased">

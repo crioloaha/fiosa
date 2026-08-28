@@ -6,6 +6,7 @@ export const DEFAULT_CONFIG = {
   logoSubtitulo: 'LOJA COLABORATIVA',
   logoImagem: null as string | null,
   logoTextoImagem: null as string | null,
+  favicon: null as string | null,
   
   heroTag: 'Tradição & Design',
   heroTitulo: 'FIOS QUE CONTAM\nHISTÓRIAS.',

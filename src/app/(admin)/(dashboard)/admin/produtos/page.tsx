@@ -77,6 +77,58 @@ interface FormData {
   custoMateriais?: MaterialItem[];
 }
 
+async function compressImage(file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
+
 const initialFormData: FormData = {
   nome: '',
   categoriaId: '',
@@ -368,31 +420,52 @@ export default function GerenciarProdutosPage() {
 
   // Image Upload handler
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    const uploadForm = new FormData();
-    uploadForm.append('file', file);
+    setSubmitting(true);
+    setErrorMsg('');
+
+    let uploadedUrls: string[] = [];
+    let errors: string[] = [];
 
     try {
-      setSubmitting(true);
-      setErrorMsg('');
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadForm,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro no upload.');
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const compressedBlob = await compressImage(file);
+          const uploadForm = new FormData();
+          uploadForm.append('file', compressedBlob, file.name);
 
-      setFormData((prev) => ({
-        ...prev,
-        fotos: [...prev.fotos, data.url],
-      }));
-      showSuccess('Foto adicionada com sucesso.');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Erro ao carregar imagem.');
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: uploadForm,
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || `Erro no upload de ${file.name}`);
+          uploadedUrls.push(data.url);
+        } catch (err: any) {
+          console.error(err);
+          errors.push(`${file.name}: ${err.message || 'Erro desconhecido'}`);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          fotos: [...prev.fotos, ...uploadedUrls],
+        }));
+        showSuccess(`${uploadedUrls.length} foto(s) adicionada(s) com sucesso.`);
+      }
+
+      if (errors.length > 0) {
+        setErrorMsg(`Erro em algumas fotos: ${errors.join(', ')}`);
+      }
+    } catch (globalErr: any) {
+      setErrorMsg(globalErr.message || 'Erro ao carregar imagens.');
     } finally {
       setSubmitting(false);
+      e.target.value = '';
     }
   };
 
@@ -951,6 +1024,7 @@ export default function GerenciarProdutosPage() {
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleImageUpload}
                     className="hidden"
                   />

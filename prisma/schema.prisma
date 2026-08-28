@@ -156,6 +156,7 @@ model Configuracao {
   logoSubtitulo      String   @default("LOJA COLABORATIVA")
   logoImagem         String?
   logoTextoImagem    String?
+  favicon            String?
   
   // Hero Section
   heroTag            String   @default("Tradição & Design")

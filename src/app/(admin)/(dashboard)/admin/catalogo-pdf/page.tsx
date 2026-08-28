@@ -21,6 +21,7 @@ import {
 interface Product {
   id: string;
   nome: string;
+  slug: string;
   categoriaId: string;
   categoria: { nome: string };
   preco: number | null;
@@ -146,19 +147,54 @@ function drawOrnament(doc: jsPDF, x: number, y: number, width: number) {
 
 /** Convert image URL to base64 data URL */
 async function imageToBase64(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url, { mode: 'cors' });
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
+  if (!url) return null;
+  if (url.startsWith('data:')) {
+    return url;
   }
+
+  const absoluteUrl = url.startsWith('/') 
+    ? typeof window !== 'undefined' 
+      ? window.location.origin + url 
+      : url 
+    : url;
+
+  try {
+    const res = await fetch(absoluteUrl, { mode: 'cors' });
+    if (res.ok) {
+      const blob = await res.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch (e) {
+    console.warn('Fetch method failed in imageToBase64, trying canvas fallback:', e);
+  }
+
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+          return;
+        }
+      } catch (err) {
+        console.error('Canvas conversion failed in imageToBase64:', err);
+      }
+      resolve(null);
+    };
+    img.onerror = () => resolve(null);
+    img.src = absoluteUrl;
+  });
 }
 
 /**
@@ -527,6 +563,9 @@ export default function CatalogoPdfPage() {
           rightColHeight += specs.length * 6.5 + 6;
         }
 
+        // Add height for the "Ver no catálogo virtual ↗" link
+        rightColHeight += 5.5;
+
         // Height of the primary block (Image side-by-side with Info)
         const mainBlockH = Math.max(imgSize, rightColHeight + 5);
 
@@ -592,6 +631,7 @@ export default function CatalogoPdfPage() {
             setStroke(doc, COLORS.mid);
             doc.setLineWidth(0.25);
             doc.rect(imgX, imgY, imgSize, imgSize, 'S');
+            doc.link(imgX, imgY, imgSize, imgSize, { url: `${FIOSA_URL}/produto/${p.slug}` });
           } else {
             setFill(doc, COLORS.light);
             doc.rect(imgX, imgY, imgSize, imgSize, 'F');
@@ -602,6 +642,7 @@ export default function CatalogoPdfPage() {
             doc.setFontSize(8);
             setColor(doc, COLORS.mid);
             doc.text('[sem foto]', imgX + imgSize / 2, imgY + imgSize / 2, { align: 'center' });
+            doc.link(imgX, imgY, imgSize, imgSize, { url: `${FIOSA_URL}/produto/${p.slug}` });
           }
         }
 
@@ -624,6 +665,8 @@ export default function CatalogoPdfPage() {
           setColor(doc, COLORS.dark);
           const nameLines = doc.splitTextToSize(p.nome, mainW);
           doc.text(nameLines.slice(0, 2), mainX, ty);
+          const nameH = nameLines.slice(0, 2).length * 6.5;
+          doc.link(mainX, ty - 5, mainW, nameH, { url: `${FIOSA_URL}/produto/${p.slug}` });
           ty += nameLines.slice(0, 2).length * 6 + 2;
         }
 
@@ -663,6 +706,16 @@ export default function CatalogoPdfPage() {
             ty += 6;
           });
         }
+
+        // Render "Ver no catálogo virtual ↗" Link
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        setColor(doc, COLORS.terracota);
+        const linkText = 'Ver no catálogo virtual ↗';
+        doc.text(linkText, mainX, ty);
+        const linkW = doc.getTextWidth(linkText);
+        doc.link(mainX, ty - 3.5, linkW, 5.5, { url: `${FIOSA_URL}/produto/${p.slug}` });
+        ty += 5.5;
 
         yCursor = currentY + mainBlockH;
 

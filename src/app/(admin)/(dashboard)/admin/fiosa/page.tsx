@@ -21,6 +21,58 @@ import {
 } from 'lucide-react';
 import ImageCropperModal from '@/components/ImageCropperModal';
 
+async function compressImage(file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
+
 const PRESETS = {
   ORIGINAL: {
     corPrimaria: '#C15C3D',
@@ -131,6 +183,7 @@ export default function FiosaAdminPage() {
     logoSubtitulo: '',
     logoImagem: '',
     logoTextoImagem: '',
+    favicon: '',
     heroTag: '',
     heroTitulo: '',
     heroSubtitulo: '',
@@ -183,6 +236,16 @@ export default function FiosaAdminPage() {
     senha: '',
   });
 
+  // Artisan Edit State
+  const [isEditingArtisan, setIsEditingArtisan] = useState(false);
+  const [editingArtisanId, setEditingArtisanId] = useState<string | null>(null);
+  const [editArtisanForm, setEditArtisanForm] = useState({
+    nome: '',
+    email: '',
+    senha: '', // blank if no change
+    perfilAtivo: true,
+  });
+
   const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [categoryForm, setCategoryForm] = useState({
@@ -216,7 +279,7 @@ export default function FiosaAdminPage() {
 
     const src = URL.createObjectURL(file);
     setCropperSrc(src);
-    if (targetField === 'logoImagem' || targetField === 'logoTextoImagem') {
+    if (targetField === 'logoImagem' || targetField === 'logoTextoImagem' || targetField === 'favicon') {
       setCropperAspect('1:1');
     } else {
       setCropperAspect('16:9');
@@ -275,6 +338,7 @@ export default function FiosaAdminPage() {
             logoSubtitulo: configData.logoSubtitulo || '',
             logoImagem: configData.logoImagem || '',
             logoTextoImagem: configData.logoTextoImagem || '',
+            favicon: configData.favicon || '',
             heroTag: configData.heroTag || '',
             heroTitulo: configData.heroTitulo || '',
             heroSubtitulo: configData.heroSubtitulo || '',
@@ -355,16 +419,18 @@ export default function FiosaAdminPage() {
     }));
   };
 
-  const handleSettingImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'logoImagem' | 'logoTextoImagem' | 'heroImagem' | 'fiosaImagem') => {
+  const handleSettingImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'logoImagem' | 'logoTextoImagem' | 'favicon' | 'heroImagem' | 'fiosaImagem') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const uploadForm = new FormData();
-    uploadForm.append('file', file);
     setSubmitting(true);
     setErrorMsg('');
 
     try {
+      const compressedBlob = await compressImage(file);
+      const uploadForm = new FormData();
+      uploadForm.append('file', compressedBlob, file.name);
+
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: uploadForm,
@@ -428,6 +494,55 @@ export default function FiosaAdminPage() {
       loadAllData();
     } catch (err: any) {
       setErrorMsg(err.message || 'Erro ao registrar artesão.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleOpenArtisanEdit = (artesao: any) => {
+    setEditArtisanForm({
+      nome: artesao.nome,
+      email: artesao.usuario.email,
+      senha: '',
+      perfilAtivo: artesao.perfilAtivo,
+    });
+    setEditingArtisanId(artesao.id);
+    setIsEditingArtisan(true);
+    setIsArtisanFormOpen(false);
+  };
+
+  const handleEditArtisanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editArtisanForm.nome || !editArtisanForm.email) return;
+    setSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const body: any = {
+        nome: editArtisanForm.nome,
+        email: editArtisanForm.email,
+        perfilAtivo: editArtisanForm.perfilAtivo,
+        status: editArtisanForm.perfilAtivo ? 'ATIVO' : 'INATIVO',
+      };
+      if (editArtisanForm.senha) {
+        body.senha = editArtisanForm.senha;
+      }
+
+      const res = await fetch(`/api/artesao/${editingArtisanId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao atualizar artesão.');
+
+      showSuccess(`Artesão "${data.nome}" atualizado com sucesso.`);
+      setIsEditingArtisan(false);
+      setEditingArtisanId(null);
+      loadAllData();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro ao atualizar artesão.');
     } finally {
       setSubmitting(false);
     }
@@ -849,6 +964,83 @@ export default function FiosaAdminPage() {
                 </div>
               )}
 
+              {isEditingArtisan && (
+                <div className="bg-[#F3EFE9] border border-[#8D7F73]/20 rounded-xl p-6 max-w-lg">
+                  <h4 className="font-serif text-base font-bold text-[#2B2D2F] border-b border-[#8D7F73]/20 pb-2 mb-4">
+                    Editar Dados do Artesão
+                  </h4>
+                  <form onSubmit={handleEditArtisanSubmit} className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
+                        Nome Completo
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editArtisanForm.nome}
+                        onChange={(e) => setEditArtisanForm({ ...editArtisanForm, nome: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#8D7F73]/30 rounded font-sans text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
+                        E-mail de Acesso
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={editArtisanForm.email}
+                        onChange={(e) => setEditArtisanForm({ ...editArtisanForm, email: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#8D7F73]/30 rounded font-sans text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
+                        Nova Senha (Deixe em branco para manter a atual)
+                      </label>
+                      <input
+                        type="text"
+                        value={editArtisanForm.senha}
+                        onChange={(e) => setEditArtisanForm({ ...editArtisanForm, senha: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#8D7F73]/30 rounded font-sans text-xs"
+                        placeholder="Mínimo 6 caracteres se alterado"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 py-1">
+                      <input
+                        type="checkbox"
+                        id="editPerfilAtivo"
+                        checked={editArtisanForm.perfilAtivo}
+                        onChange={(e) => setEditArtisanForm({ ...editArtisanForm, perfilAtivo: e.target.checked })}
+                        className="h-4 w-4 text-[#C15C3D] border-[#8D7F73]/40 rounded focus:ring-[#C15C3D]"
+                      />
+                      <label htmlFor="editPerfilAtivo" className="font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70 cursor-pointer">
+                        Perfil Ativo no Site
+                      </label>
+                    </div>
+                    <div className="flex gap-2 justify-end pt-3 border-t border-[#8D7F73]/20">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingArtisan(false);
+                          setEditingArtisanId(null);
+                        }}
+                        className="px-4 py-2 border border-[#8D7F73]/40 rounded text-[#2B2D2F] font-sans text-xs font-bold uppercase hover:bg-white/40"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="bg-[#C15C3D] hover:bg-[#C15C3D]/95 text-white px-4 py-2 rounded font-sans text-xs font-bold uppercase disabled:opacity-75"
+                      >
+                        Salvar
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
               {/* Artisans list table */}
               <div className="bg-[#FDFBF7] border border-[#8D7F73]/20 rounded-xl overflow-hidden shadow-sm">
                 <table className="w-full text-left font-sans text-xs">
@@ -883,13 +1075,22 @@ export default function FiosaAdminPage() {
                           </button>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => handleDeleteArtisan(a.id)}
-                            className="p-1.5 bg-[#F3EFE9] text-red-600 border border-[#8D7F73]/30 hover:border-red-600 rounded transition-all"
-                            title="Remover artesão"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          <div className="flex justify-end gap-1.5">
+                            <button
+                              onClick={() => handleOpenArtisanEdit(a)}
+                              className="p-1.5 bg-[#F3EFE9] text-[#2B2D2F] border border-[#8D7F73]/30 hover:border-[#C15C3D] rounded transition-all"
+                              title="Editar artesão"
+                            >
+                              <Edit2 size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteArtisan(a.id)}
+                              className="p-1.5 bg-[#F3EFE9] text-red-600 border border-[#8D7F73]/30 hover:border-red-600 rounded transition-all"
+                              title="Remover artesão"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1253,7 +1454,7 @@ export default function FiosaAdminPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block font-bold text-fiosa-grafite/70 uppercase">Ícone de Marca / Identidade Visual (Favicon & Esquerda do Título)</label>
+                  <label className="block font-bold text-fiosa-grafite/70 uppercase">Ícone de Marca / Identidade Visual (Esquerda do Título)</label>
                   <div className="flex items-center gap-4">
                     {settingsForm.logoImagem && (
                       <div className="h-10 w-10 relative border border-fiosa-marrom/30 bg-fiosa-linho rounded overflow-hidden flex items-center justify-center">
@@ -1262,7 +1463,7 @@ export default function FiosaAdminPage() {
                     )}
                     <label className="cursor-pointer inline-flex items-center gap-1.5 bg-fiosa-linho hover:bg-fiosa-marrom/10 border border-fiosa-marrom/30 px-3 py-2 rounded font-bold uppercase transition-colors text-fiosa-grafite text-xs">
                       <Upload size={14} />
-                      Carregar Ícone/Favicon
+                      Carregar Ícone de Marca
                       <input
                         type="file"
                         accept="image/*"
@@ -1277,6 +1478,36 @@ export default function FiosaAdminPage() {
                         className="text-red-600 font-bold hover:underline"
                       >
                         Limpar Ícone
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block font-bold text-fiosa-grafite/70 uppercase">Favicon do Site (Aba do Navegador)</label>
+                  <div className="flex items-center gap-4">
+                    {settingsForm.favicon && (
+                      <div className="h-10 w-10 relative border border-fiosa-marrom/30 bg-fiosa-linho rounded overflow-hidden flex items-center justify-center">
+                        <img src={settingsForm.favicon} alt="Favicon preview" className="h-full w-full object-contain" />
+                      </div>
+                    )}
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 bg-fiosa-linho hover:bg-fiosa-marrom/10 border border-fiosa-marrom/30 px-3 py-2 rounded font-bold uppercase transition-colors text-fiosa-grafite text-xs">
+                      <Upload size={14} />
+                      Carregar Favicon
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleConfigImageSelect(e, 'favicon')}
+                        className="hidden"
+                      />
+                    </label>
+                    {settingsForm.favicon && (
+                      <button
+                        type="button"
+                        onClick={() => setSettingsForm({ ...settingsForm, favicon: '' })}
+                        className="text-red-600 font-bold hover:underline"
+                      >
+                        Limpar Favicon
                       </button>
                     )}
                   </div>
