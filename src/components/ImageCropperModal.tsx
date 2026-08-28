@@ -24,12 +24,41 @@ export default function ImageCropperModal({
   const dragStart = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [imgDims, setImgDims] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     // Reset state when new image is loaded
     setZoom(1);
     setOffset({ x: 0, y: 0 });
+    setImgDims({ width: 0, height: 0 });
   }, [imageSrc, isOpen]);
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const containerRatio = containerRect.width / containerRect.height;
+    const imgRatio = img.naturalWidth / img.naturalHeight;
+
+    let w = containerRect.width;
+    let h = containerRect.height;
+
+    if (imgRatio > containerRatio) {
+      h = containerRect.height;
+      w = h * imgRatio;
+    } else {
+      w = containerRect.width;
+      h = w / imgRatio;
+    }
+
+    setImgDims({ width: w, height: h });
+    setOffset({
+      x: (containerRect.width - w) / 2,
+      y: (containerRect.height - h) / 2,
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -181,14 +210,14 @@ export default function ImageCropperModal({
               src={imageSrc}
               alt="Crop preview"
               draggable="false"
+              onLoad={handleImageLoad}
               className="absolute max-w-none origin-center cursor-move"
               style={{
                 transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
                 left: '0px',
                 top: '0px',
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
+                width: imgDims.width ? `${imgDims.width}px` : 'auto',
+                height: imgDims.height ? `${imgDims.height}px` : 'auto',
               }}
             />
             {/* Aspect ratio guide overlay */}
