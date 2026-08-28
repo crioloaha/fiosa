@@ -897,32 +897,63 @@ export default function CatalogoPdfPage() {
         const urlTextW = doc.getTextWidth(FIOSA_URL);
         doc.link(cardX + cardW / 2 - urlTextW / 2, cy - 4, urlTextW, 6, { url: FIOSA_URL });
       } else {
-        // Multiple artisans: compact cards grid
+        // Multiple artisans: compact cards grid with dynamic pagination
         let contactY = 70;
         const colW = (PAGE_W - 20 - MARGIN * 2) / 2;
+        let currentPageNum = contactPageIndex;
+        let currentPageRow = 0;
+        let itemsOnLastPage = 0;
+
         contactArtesaos.forEach((a, idx) => {
           const col = idx % 2;
-          const row = Math.floor(idx / 2);
+          const cardTop = contactY + currentPageRow * 52;
+
+          // Check if it fits on the current page. Limit is PAGE_H - 35
+          if (cardTop + 46 > PAGE_H - 30) {
+            // It doesn't fit on the current page. Add a new page!
+            doc.addPage();
+            currentPageNum = doc.getNumberOfPages();
+            contentPageIndices.push(currentPageNum);
+            doc.setPage(currentPageNum);
+
+            // Paint background & side stripe once for the new content page
+            setFill(doc, COLORS.cream);
+            doc.rect(0, 0, PAGE_W, PAGE_H, 'F');
+            drawSideStripe(doc);
+
+            // Redraw top banner on new page
+            setFill(doc, COLORS.terracota);
+            doc.rect(9, 0, PAGE_W - 9, 18, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7.5);
+            setColor(doc, COLORS.white);
+            doc.text('CONTATO & ENCOMENDAS (CONT.)', PAGE_W / 2 + 4.5, 11, { align: 'center' });
+
+            currentPageRow = 0;
+            contactY = 30; // Start higher up since cover elements are not here
+            itemsOnLastPage = 0; // reset counter for this page
+          }
+
+          itemsOnLastPage++;
           const cx = MARGIN + col * (colW + 8);
-          const cardTop = contactY + row * 52;
-          if (cardTop + 52 > PAGE_H - 30) return;
+          const currentCardTop = contactY + currentPageRow * 52;
 
           setFill(doc, COLORS.white);
-          doc.roundedRect(cx, cardTop, colW, 46, 3, 3, 'F');
+          doc.roundedRect(cx, currentCardTop, colW, 46, 3, 3, 'F');
           setStroke(doc, COLORS.light);
           doc.setLineWidth(0.4);
-          doc.roundedRect(cx, cardTop, colW, 46, 3, 3, 'S');
+          doc.roundedRect(cx, currentCardTop, colW, 46, 3, 3, 'S');
 
           setFill(doc, COLORS.terracota);
-          doc.roundedRect(cx, cardTop, colW, 9, 3, 3, 'F');
-          doc.rect(cx, cardTop + 5, colW, 4, 'F');
+          doc.roundedRect(cx, currentCardTop, colW, 9, 3, 3, 'F');
+          doc.rect(cx, currentCardTop + 5, colW, 4, 'F');
 
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(6.5);
           setColor(doc, COLORS.white);
-          doc.text(a.nome.toUpperCase(), cx + colW / 2, cardTop + 6, { align: 'center' });
+          doc.text(a.nome.toUpperCase(), cx + colW / 2, currentCardTop + 6, { align: 'center' });
 
-          let iy = cardTop + 16;
+          let iy = currentCardTop + 16;
           if (a.marca) {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7);
@@ -938,9 +969,18 @@ export default function CatalogoPdfPage() {
             if (a.instagram) { doc.text(`⊙ @${a.instagram.replace(/^@/, '')}`, cx + 6, iy); iy += 6; }
             if (a.emailContato) { doc.text(`✉ ${a.emailContato}`, cx + 6, iy); }
           }
+
+          if (col === 1) {
+            currentPageRow++;
+          }
         });
 
-        const fiosaFooterY = contactY + Math.ceil(contactArtesaos.length / 2) * 52 + 10;
+        // Ensure we are set to the last contact page for footer and slogan rendering
+        const lastPage = doc.getNumberOfPages();
+        doc.setPage(lastPage);
+
+        const rowsOnLastPage = Math.ceil(itemsOnLastPage / 2);
+        const fiosaFooterY = contactY + rowsOnLastPage * 52 + 10;
         if (fiosaFooterY < PAGE_H - 40) {
           setStroke(doc, COLORS.mid);
           doc.setLineWidth(0.2);
@@ -962,10 +1002,12 @@ export default function CatalogoPdfPage() {
         }
       }
 
+      const finalPage = doc.getNumberOfPages();
+      doc.setPage(finalPage);
       doc.setFont('times', 'italic');
       doc.setFontSize(11);
       setColor(doc, COLORS.mid);
-      doc.text('Fios que conectam pessoas, histórias e lugares.', PAGE_W / 2, 220, { align: 'center' });
+      doc.text('Fios que conectam pessoas, histórias e lugares.', PAGE_W / 2, PAGE_H - 22, { align: 'center' });
 
       // ── POST-PROCESSING HEADERS & FOOTERS FOR ALL PAGES ────────────────────
       const totalPages = doc.getNumberOfPages();
