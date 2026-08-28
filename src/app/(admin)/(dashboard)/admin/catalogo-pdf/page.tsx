@@ -563,9 +563,6 @@ export default function CatalogoPdfPage() {
           rightColHeight += specs.length * 6.5 + 6;
         }
 
-        // Add height for the "Ver no catálogo virtual ↗" link
-        rightColHeight += 5.5;
-
         // Height of the primary block (Image side-by-side with Info)
         const mainBlockH = Math.max(imgSize, rightColHeight + 5);
 
@@ -581,10 +578,11 @@ export default function CatalogoPdfPage() {
           descBlockH = 5 + descLines.length * 4.2 + 6;
         }
 
+        const buttonBlockH = 9; // 7mm button + 2mm top margin
         const dividerH = 8; // Margin between products on the same page
 
         // Total vertical height required by this product
-        const totalProductH = mainBlockH + (descBlockH > 0 ? descBlockH + 4 : 0) + dividerH;
+        const totalProductH = mainBlockH + (descBlockH > 0 ? descBlockH + 4 : 0) + buttonBlockH + dividerH;
 
         // If it doesn't fit on the page, create a new page
         if (yCursor + totalProductH > Y_MAX && yCursor > Y_START) {
@@ -707,16 +705,6 @@ export default function CatalogoPdfPage() {
           });
         }
 
-        // Render "Ver no catálogo virtual ↗" Link
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7.5);
-        setColor(doc, COLORS.terracota);
-        const linkText = 'Ver no catálogo virtual ↗';
-        doc.text(linkText, mainX, ty);
-        const linkW = doc.getTextWidth(linkText);
-        doc.link(mainX, ty - 3.5, linkW, 5.5, { url: `${FIOSA_URL}/produto/${p.slug}` });
-        ty += 5.5;
-
         yCursor = currentY + mainBlockH;
 
         // ── Render Dynamic Description Box below Image ──
@@ -743,6 +731,31 @@ export default function CatalogoPdfPage() {
           yCursor += descBlockH;
         }
 
+        // ── Render Button "Ver no catálogo virtual" ──
+        yCursor += 2;
+        const btnX = 16;
+        const btnY = yCursor;
+        const btnW = 60; // 60mm wide button
+        const btnH = 7;  // 7mm high button
+
+        // Draw rounded filled rect for button
+        setFill(doc, COLORS.terracota);
+        doc.roundedRect(btnX, btnY, btnW, btnH, 1.5, 1.5, 'F');
+
+        // Draw button text centered
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        setColor(doc, COLORS.white);
+        const btnText = 'Ver no Catálogo Virtual ↗';
+        const textWidth = doc.getTextWidth(btnText);
+        const textX = btnX + (btnW - textWidth) / 2;
+        doc.text(btnText, textX, btnY + 4.6);
+
+        // Add link over the entire button area
+        doc.link(btnX, btnY, btnW, btnH, { url: `${FIOSA_URL}/produto/${p.slug}` });
+
+        yCursor += btnH;
+
         // Apply bottom spacing
         yCursor += dividerH;
 
@@ -760,7 +773,7 @@ export default function CatalogoPdfPage() {
             const nextLines = doc.splitTextToSize(nextProduct.descricao, descTextW);
             nextDescH = 5 + nextLines.length * 4.2 + 6;
           }
-          const nextTotalH = nextMainH + (nextDescH > 0 ? nextDescH + 4 : 0) + dividerH;
+          const nextTotalH = nextMainH + (nextDescH > 0 ? nextDescH + 4 : 0) + 9 + dividerH;
 
           // Dotted divisor line
           if (yCursor + nextTotalH <= Y_MAX) {
