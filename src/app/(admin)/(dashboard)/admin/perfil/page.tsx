@@ -38,6 +38,8 @@ export default function PerfilPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [fotoChanged, setFotoChanged] = useState(false);
+  const [capaChanged, setCapaChanged] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -115,6 +117,8 @@ export default function PerfilPage() {
       if (!res.ok) throw new Error(data.error || 'Erro no upload.');
 
       setProfile({ ...profile, [cropperTarget]: data.url });
+      if (cropperTarget === 'foto') setFotoChanged(true);
+      if (cropperTarget === 'capa') setCapaChanged(true);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -132,17 +136,49 @@ export default function PerfilPage() {
     setError('');
     setSuccess(false);
 
+    const updatePayload: any = {
+      nome: profile.nome,
+      marca: profile.marca,
+      bio: profile.bio,
+      historia: profile.historia,
+      whatsapp: profile.whatsapp,
+      telefone: profile.telefone,
+      emailContato: profile.emailContato,
+      endereco: profile.endereco,
+      cidade: profile.cidade,
+      cep: profile.cep,
+      localizacaoMapa: profile.localizacaoMapa,
+      instagram: profile.instagram,
+      facebook: profile.facebook,
+      tiktok: profile.tiktok,
+      website: profile.website,
+      perfilAtivo: profile.perfilAtivo,
+      mostrarTelefone: profile.mostrarTelefone,
+      mostrarEndereco: profile.mostrarEndereco,
+      mostrarPreco: profile.mostrarPreco,
+      aceitarWhats: profile.aceitarWhats,
+    };
+
+    if (fotoChanged) {
+      updatePayload.foto = profile.foto;
+    }
+    if (capaChanged) {
+      updatePayload.capa = profile.capa;
+    }
+
     try {
       const res = await fetch(`/api/artesao/${profile.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profile),
+        body: JSON.stringify(updatePayload),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao salvar perfil.');
 
       setSuccess(true);
+      setFotoChanged(false);
+      setCapaChanged(false);
       router.refresh();
       setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {

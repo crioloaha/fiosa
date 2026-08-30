@@ -41,6 +41,7 @@ export const DEFAULT_CONFIG = {
   sobreResendeCostaTexto2: 'Caminhar pelas lojas de Resende Costa and ouvir o som ritmado dos teares tradicionais funcionando é uma imersão na cultura viva de Minas Gerais.',
   sobreResendeCostaImagem: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
   
+  visiteBannerImagem: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80',
   visiteIntroTitulo: 'Conheça a Nossa Cidade',
   visiteIntroTexto: 'Resende Costa está localizada no Circuito Turístico Trilha dos Inconfidentes, no Campo das Vertentes. Vizinha das históricas São João del-Rei e Tiradentes, a cidade destaca-se nacionalmente pela produção têxtil artesanal. Aqui, quase todas as famílias possuem um laço direto ou indireto com o tear manual. É um refúgio acolhedor onde a hospitalidade mineira e a cultura popular estão em cada esquina.',
   

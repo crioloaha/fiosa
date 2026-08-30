@@ -571,6 +571,9 @@ export default function CatalogoPdfPage() {
           // 5mm header, 4.2mm per text line, 5mm dynamic box margins
           descBlockH = 5 + descLines.length * 4.2 + 5;
           rightColHeight += descBlockH + 4; // Spacing before description block
+          if (specs.length > 0) {
+            rightColHeight += 6; // Extra line of spacing from specifications block
+          }
         }
 
         // Button block height: 7.5mm (button) + 3mm top spacing
@@ -707,7 +710,11 @@ export default function CatalogoPdfPage() {
 
         // ── Render Dynamic Description Box inside Right Column ──
         if (descBlockH > 0 && descLines.length > 0) {
-          ty += 2;
+          if (specs.length > 0) {
+            ty += 8; // Extra line of spacing from specifications block
+          } else {
+            ty += 2;
+          }
 
           // Title
           doc.setFont('helvetica', 'bold');

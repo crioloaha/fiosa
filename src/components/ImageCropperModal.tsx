@@ -126,11 +126,11 @@ export default function ImageCropperModal({
     if (!ctx) return;
 
     // Define output dimensions based on crop type
-    let width = 600;
+    let width = 400;
     if (aspectRatio === '3:1') {
-      width = 1200;
+      width = 900;
     } else if (aspectRatio === '16:9') {
-      width = 1600;
+      width = 1200;
     }
     const height = width / targetRatio;
 
@@ -168,7 +168,7 @@ export default function ImageCropperModal({
       if (blob) {
         onCrop(blob);
       }
-    }, 'image/jpeg', 0.85);
+    }, 'image/jpeg', 0.75);
   };
 
   return (

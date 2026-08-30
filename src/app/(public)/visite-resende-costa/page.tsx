@@ -33,7 +33,7 @@ export default async function VisiteResendeCostaPage() {
       <section className="relative h-96 flex items-center justify-center overflow-hidden bg-fiosa-grafite">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80"
+            src={config.visiteBannerImagem || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80"}
             alt="Resende Costa MG"
             fill
             className="object-cover opacity-40 object-center"

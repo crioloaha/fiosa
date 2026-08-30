@@ -220,6 +220,7 @@ export default function FiosaAdminPage() {
     visiteSecao2Titulo: '',
     visiteSecao2Texto: '',
     visiteSecao2Imagem: '',
+    visiteBannerImagem: '',
     experienciasIntroTitulo: '',
     experienciasIntroTexto: '',
     contatoIntroTitulo: '',
@@ -375,6 +376,7 @@ export default function FiosaAdminPage() {
             visiteSecao2Titulo: configData.visiteSecao2Titulo || '',
             visiteSecao2Texto: configData.visiteSecao2Texto || '',
             visiteSecao2Imagem: configData.visiteSecao2Imagem || '',
+            visiteBannerImagem: configData.visiteBannerImagem || '',
             experienciasIntroTitulo: configData.experienciasIntroTitulo || '',
             experienciasIntroTexto: configData.experienciasIntroTexto || '',
             contatoIntroTitulo: configData.contatoIntroTitulo || '',
@@ -1973,6 +1975,41 @@ export default function FiosaAdminPage() {
                         onChange={(e) => setSettingsForm({ ...settingsForm, visiteIntroTexto: e.target.value })}
                         className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded leading-relaxed text-xs text-fiosa-grafite"
                       />
+                    </div>
+                  </div>
+
+                  {/* Banner Image */}
+                  <div className="space-y-1 pt-2">
+                    <label className="block font-bold text-fiosa-grafite/70 uppercase text-xs">Imagem de Banner da Página</label>
+                    <div className="flex gap-4 items-center">
+                      <div className="relative h-20 w-40 rounded overflow-hidden border border-[#8D7F73]/40 bg-white shrink-0 shadow-inner">
+                        {settingsForm.visiteBannerImagem ? (
+                          <img src={settingsForm.visiteBannerImagem} alt="Banner Resende Costa" className="object-cover h-full w-full" />
+                        ) : (
+                          <div className="h-full w-full bg-slate-200" />
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="cursor-pointer inline-flex items-center justify-center gap-1.5 bg-fiosa-linho border border-fiosa-marrom/30 px-4 py-2 rounded text-xs font-bold uppercase transition-colors hover:bg-fiosa-marrom/10">
+                          <Upload size={14} />
+                          Enviar Banner
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleConfigImageSelect(e, 'visiteBannerImagem')}
+                            className="hidden"
+                          />
+                        </label>
+                        {settingsForm.visiteBannerImagem && (
+                          <button
+                            type="button"
+                            onClick={() => setSettingsForm({ ...settingsForm, visiteBannerImagem: '' })}
+                            className="text-red-600 font-bold hover:underline text-[11px] text-left"
+                          >
+                            Remover Imagem (usar padrão)
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
