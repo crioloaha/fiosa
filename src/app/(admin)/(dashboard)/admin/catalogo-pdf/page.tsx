@@ -741,13 +741,12 @@ export default function CatalogoPdfPage() {
         setFill(doc, COLORS.terracota);
         doc.roundedRect(btnX, btnY, btnW, btnH, 1.5, 1.5, 'F');
 
-        // Draw button text centered
+        // Draw button text left-aligned
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(7.5);
         setColor(doc, COLORS.white);
         const btnText = 'Ver no Catálogo Virtual ↗';
-        const textWidth = doc.getTextWidth(btnText);
-        const textX = btnX + (btnW - textWidth) / 2;
+        const textX = btnX + 4; // 4mm padding from the left edge of the button
         doc.text(btnText, textX, btnY + 4.8);
 
         // Add link over the entire button area

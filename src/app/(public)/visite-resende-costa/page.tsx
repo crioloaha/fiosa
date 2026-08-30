@@ -4,6 +4,8 @@ import { MapPin, Compass, UtensilsCrossed, Hotel, Navigation } from 'lucide-reac
 import type { Metadata } from 'next';
 import { getConfig } from '@/lib/config';
 
+export const revalidate = 0; // Disable caching for dynamic edits
+
 export const metadata: Metadata = {
   title: 'Guia de Turismo de Resende Costa - Capital do Tear | FIOSA',
   description: 'Descubra a história da tradição secular do tear, saiba onde comprar artesanato direto do produtor, onde comer e se hospedar em Resende Costa, Minas Gerais.',

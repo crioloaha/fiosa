@@ -3,6 +3,8 @@ import { getConfig } from '@/lib/config';
 import ContactForm from '@/components/ContactForm';
 import type { Metadata } from 'next';
 
+export const revalidate = 0; // Disable caching for dynamic edits
+
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getConfig();
   return {
