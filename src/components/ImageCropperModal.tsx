@@ -141,12 +141,9 @@ export default function ImageCropperModal({
 
     // Calculate dimensions & position relative to container
     const containerRect = container.getBoundingClientRect();
-    const scaleX = img.naturalWidth / (img.width * zoom);
-    const scaleY = img.naturalHeight / (img.height * zoom);
-
-    // Compute source crop coordinates
-    // Offset is how much the image center has been dragged relative to container center
     const imgRect = img.getBoundingClientRect();
+    const scaleX = img.naturalWidth / imgRect.width;
+    const scaleY = img.naturalHeight / imgRect.height;
     const sourceX = (containerRect.left - imgRect.left) * scaleX;
     const sourceY = (containerRect.top - imgRect.top) * scaleY;
     const sourceWidth = containerRect.width * scaleX;
