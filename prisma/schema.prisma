@@ -195,8 +195,13 @@ model Configuracao {
   sobreResendeCostaTexto1  String   @default("Localizada no Campo das Vertentes, vizinha de São João del-Rei e Tiradentes, Resende Costa respira artesanato. A cidade é famosa por suas fachadas repletas de colchas, caminhos de mesa e tapetes coloridos, uma tradição que atravessa gerações e remonta ao século XVIII.")
   sobreResendeCostaTexto2  String   @default("Caminhar pelas lojas de Resende Costa and ouvir o som ritmado dos teares tradicionais funcionando é uma imersão na cultura viva de Minas Gerais.")
   sobreResendeCostaImagem  String   @default("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80")
-  
   visiteBannerImagem       String   @default("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80")
+  visiteBannerTag          String   @default("Descubra as Vertentes")
+  visiteBannerTitulo       String   @default("Visite Resende Costa")
+  visiteBannerSubtitulo    String   @default("A capital mineira do tear manual, aconchego nas montanhas e gastronomia típica.")
+  visiteGuiaFazer          String   @default("Explorar a Rua São Sebastião e suas dezenas de lojas coloridas.\nVisitar a Igreja Matriz de Nossa Senhora da Penha, no topo da colina.\nAgendar uma Vivência de Tear com os artesãos locais.\nApreciar o Mirante da Laje para fotos incríveis do pôr do sol.")
+  visiteGuiaComer          String   @default("Restaurantes de fogão a lenha no centro histórico (frango com quiabo, tutu à mineira).\nCafeterias artesanais com pão de queijo quentinho e broas de milho.\nVisitar queijarias locais nos arredores da cidade.\nDocerias típicas vendendo doce de leite e compotas caseiras.")
+  visiteGuiaFicar          String   @default("Pousadas coloniais charmosas localizadas no centro histórico.\nChácaras de turismo rural nos arredores para maior contato com a natureza.\nHospedagens acolhedoras integradas a propriedades de artesãos.")
   visiteIntroTitulo        String   @default("Conheça a Nossa Cidade")
   visiteIntroTexto         String   @default("Resende Costa está localizada no Circuito Turístico Trilha dos Inconfidentes, no Campo das Vertentes. Vizinha das históricas São João del-Rei e Tiradentes, a cidade destaca-se nacionalmente pela produção têxtil artesanal. Aqui, quase todas as famílias possuem um laço direto ou indireto com o tear manual. É um refúgio acolhedor onde a hospitalidade mineira e a cultura popular estão em cada esquina.")
   

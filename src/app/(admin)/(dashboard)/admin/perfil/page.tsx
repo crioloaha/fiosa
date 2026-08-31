@@ -630,6 +630,7 @@ export default function PerfilPage() {
         aspectRatio={cropperAspect}
         onClose={() => setCropperOpen(false)}
         onCrop={handleCroppedImage}
+        exportType={cropperTarget === 'foto' ? 'image/png' : 'image/jpeg'}
       />
     </div>
   );

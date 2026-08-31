@@ -9,6 +9,7 @@ interface ImageCropperModalProps {
   aspectRatio: '1:1' | '3:1' | '16:9'; // Target crop ratio
   onClose: () => void;
   onCrop: (croppedBlob: Blob) => void;
+  exportType?: 'image/jpeg' | 'image/png';
 }
 
 export default function ImageCropperModal({
@@ -17,6 +18,7 @@ export default function ImageCropperModal({
   aspectRatio,
   onClose,
   onCrop,
+  exportType = 'image/jpeg',
 }: ImageCropperModalProps) {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -168,7 +170,7 @@ export default function ImageCropperModal({
       if (blob) {
         onCrop(blob);
       }
-    }, 'image/jpeg', 0.75);
+    }, exportType, exportType === 'image/png' ? undefined : 0.85);
   };
 
   return (

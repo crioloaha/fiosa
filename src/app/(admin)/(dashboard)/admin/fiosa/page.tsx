@@ -280,8 +280,10 @@ export default function FiosaAdminPage() {
 
     const src = URL.createObjectURL(file);
     setCropperSrc(src);
-    if (targetField === 'logoImagem' || targetField === 'logoTextoImagem' || targetField === 'favicon') {
+    if (targetField === 'logoImagem' || targetField === 'favicon') {
       setCropperAspect('1:1');
+    } else if (targetField === 'logoTextoImagem') {
+      setCropperAspect('3:1');
     } else {
       setCropperAspect('16:9');
     }
@@ -2222,6 +2224,7 @@ export default function FiosaAdminPage() {
         aspectRatio={cropperAspect}
         onClose={() => setCropperOpen(false)}
         onCrop={handleCroppedImageUpload}
+        exportType={cropperTarget === 'logoImagem' || cropperTarget === 'logoTextoImagem' || cropperTarget === 'favicon' ? 'image/png' : 'image/jpeg'}
       />
     </div>
   );
