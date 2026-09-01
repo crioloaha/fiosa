@@ -189,6 +189,7 @@ model Configuracao {
   contatoTelefone    String   @default("(32) 3354-1111")
   contatoEmail       String   @default("contato@fiosa.com.br")
   contatoInstagram   String   @default("fiosa.colaborativa")
+  contatoMapaIframe  String   @default("https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14872.238473855011!2d-44.4237194!3d-20.8931135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9f560e206037e9%3A0xc6c4de055f65bc7c!2sResende%20Costa%2C%20MG!5e0!3m2!1spt-BR!2sbr!4v1714850000000")
 
   // Conteúdos Dinâmicos de Páginas
   sobreResendeCostaTitulo  String   @default("Resende Costa, a Capital Mineira do Tear")

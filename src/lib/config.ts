@@ -35,6 +35,7 @@ export const DEFAULT_CONFIG = {
   contatoTelefone: '(32) 3354-1111',
   contatoEmail: 'contato@fiosa.com.br',
   contatoInstagram: 'fiosa.colaborativa',
+  contatoMapaIframe: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14872.238473855011!2d-44.4237194!3d-20.8931135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9f560e206037e9%3A0xc6c4de055f65bc7c!2sResende%20Costa%2C%20MG!5e0!3m2!1spt-BR!2sbr!4v1714850000000',
 
   sobreResendeCostaTitulo: 'Resende Costa, a Capital Mineira do Tear',
   sobreResendeCostaTexto1: 'Localizada no Campo das Vertentes, vizinha de São João del-Rei e Tiradentes, Resende Costa respira artesanato. A cidade é famosa por suas fachadas repletas de colchas, caminhos de mesa e tapetes coloridos, uma tradição que atravessa gerações e remonta ao século XVIII.',
@@ -42,6 +43,12 @@ export const DEFAULT_CONFIG = {
   sobreResendeCostaImagem: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
   
   visiteBannerImagem: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80',
+  visiteBannerTag: 'Descubra as Vertentes',
+  visiteBannerTitulo: 'Visite Resende Costa',
+  visiteBannerSubtitulo: 'A capital mineira do tear manual, aconchego nas montanhas e gastronomia típica.',
+  visiteGuiaFazer: 'Explorar a Rua São Sebastião e suas dezenas de lojas coloridas.\nVisitar a Igreja Matriz de Nossa Senhora da Penha, no topo da colina.\nAgendar uma Vivência de Tear com os artesãos locais.\nApreciar o Mirante da Laje para fotos incríveis do pôr do sol.',
+  visiteGuiaComer: 'Restaurantes de fogão a lenha no centro histórico (frango com quiabo, tutu à mineira).\nCafeterias artesanais com pão de queijo quentinho e broas de milho.\nVisitar queijarias locais nos arredores da cidade.\nDocerias típicas vendendo doce de leite e compotas caseiras.',
+  visiteGuiaFicar: 'Pousadas coloniais charmosas localizadas no centro histórico.\nChácaras de turismo rural nos arredores para maior contato com a natureza.\nHospedagens acolhedoras integradas a propriedades de artesãos.',
   visiteIntroTitulo: 'Conheça a Nossa Cidade',
   visiteIntroTexto: 'Resende Costa está localizada no Circuito Turístico Trilha dos Inconfidentes, no Campo das Vertentes. Vizinha das históricas São João del-Rei e Tiradentes, a cidade destaca-se nacionalmente pela produção têxtil artesanal. Aqui, quase todas as famílias possuem um laço direto ou indireto com o tear manual. É um refúgio acolhedor onde a hospitalidade mineira e a cultura popular estão em cada esquina.',
   

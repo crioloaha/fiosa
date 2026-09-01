@@ -110,16 +110,25 @@ export default async function ContatoPage() {
           </div>
 
           {/* Embedded Map */}
-          <div className="relative h-48 w-full rounded overflow-hidden shadow-sm border border-fiosa-marrom/20">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14949.25603704207!2d-44.2483856!3d-20.9009848!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa1b4e2d33458ef%3A0xe54d2417743ea40c!2sResende%20Costa%2C%20MG%2C%2036340-000!5e0!3m2!1spt-BR!2sbr!4v1620000000000"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen={true}
-              loading="lazy"
-            ></iframe>
-          </div>
+          {(() => {
+            let mapSrc = config.contatoMapaIframe || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14872.238473855011!2d-44.4237194!3d-20.8931135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9f560e206037e9%3A0xc6c4de055f65bc7c!2sResende%20Costa%2C%20MG!5e0!3m2!1spt-BR!2sbr!4v1714850000000";
+            if (mapSrc.includes('<iframe')) {
+              const match = mapSrc.match(/src="([^"]+)"/);
+              if (match) mapSrc = match[1];
+            }
+            return (
+              <div className="relative h-48 w-full rounded overflow-hidden shadow-sm border border-fiosa-marrom/20">
+                <iframe
+                  src={mapSrc}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
+                ></iframe>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right: Contact Form */}

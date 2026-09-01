@@ -208,6 +208,7 @@ export default function FiosaAdminPage() {
     contatoTelefone: '',
     contatoEmail: '',
     contatoInstagram: '',
+    contatoMapaIframe: '',
     sobreResendeCostaTitulo: '',
     sobreResendeCostaTexto1: '',
     sobreResendeCostaTexto2: '',
@@ -221,6 +222,12 @@ export default function FiosaAdminPage() {
     visiteSecao2Texto: '',
     visiteSecao2Imagem: '',
     visiteBannerImagem: '',
+    visiteBannerTag: '',
+    visiteBannerTitulo: '',
+    visiteBannerSubtitulo: '',
+    visiteGuiaFazer: '',
+    visiteGuiaComer: '',
+    visiteGuiaFicar: '',
     experienciasIntroTitulo: '',
     experienciasIntroTexto: '',
     contatoIntroTitulo: '',
@@ -366,6 +373,7 @@ export default function FiosaAdminPage() {
             contatoTelefone: configData.contatoTelefone || '',
             contatoEmail: configData.contatoEmail || '',
             contatoInstagram: configData.contatoInstagram || '',
+            contatoMapaIframe: configData.contatoMapaIframe || '',
             sobreResendeCostaTitulo: configData.sobreResendeCostaTitulo || '',
             sobreResendeCostaTexto1: configData.sobreResendeCostaTexto1 || '',
             sobreResendeCostaTexto2: configData.sobreResendeCostaTexto2 || '',
@@ -379,6 +387,12 @@ export default function FiosaAdminPage() {
             visiteSecao2Texto: configData.visiteSecao2Texto || '',
             visiteSecao2Imagem: configData.visiteSecao2Imagem || '',
             visiteBannerImagem: configData.visiteBannerImagem || '',
+            visiteBannerTag: configData.visiteBannerTag || '',
+            visiteBannerTitulo: configData.visiteBannerTitulo || '',
+            visiteBannerSubtitulo: configData.visiteBannerSubtitulo || '',
+            visiteGuiaFazer: configData.visiteGuiaFazer || '',
+            visiteGuiaComer: configData.visiteGuiaComer || '',
+            visiteGuiaFicar: configData.visiteGuiaFicar || '',
             experienciasIntroTitulo: configData.experienciasIntroTitulo || '',
             experienciasIntroTexto: configData.experienciasIntroTexto || '',
             contatoIntroTitulo: configData.contatoIntroTitulo || '',
@@ -1881,6 +1895,19 @@ export default function FiosaAdminPage() {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-1 pt-4">
+                  <label className="block font-bold text-fiosa-grafite/70 uppercase">Google Maps (URL ou Iframe Embed)</label>
+                  <p className="text-[10px] text-fiosa-grafite/50 mb-1 leading-tight">Cole o código HTML do iframe gerado pelo Google Maps ou diretamente o link (URL) do mapa (src).</p>
+                  <textarea
+                    rows={3}
+                    required
+                    value={settingsForm.contatoMapaIframe}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, contatoMapaIframe: e.target.value })}
+                    className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded font-mono text-[10px] text-fiosa-grafite"
+                    placeholder='<iframe src="https://www.google.com/maps/embed?..." ...></iframe>'
+                  />
+                </div>
               </div>
 
               {/* Section 5: Dynamic Page Content Editor */}
@@ -1957,6 +1984,39 @@ export default function FiosaAdminPage() {
                   <h4 className="font-serif text-sm font-bold text-fiosa-terracota border-b border-fiosa-marrom/10 pb-1">
                     Página: Visite Resende Costa
                   </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Tag do Banner</label>
+                      <input
+                        type="text"
+                        required
+                        value={settingsForm.visiteBannerTag}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, visiteBannerTag: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-fiosa-grafite text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Título do Banner</label>
+                      <input
+                        type="text"
+                        required
+                        value={settingsForm.visiteBannerTitulo}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, visiteBannerTitulo: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-fiosa-grafite text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block font-bold text-fiosa-grafite/70 uppercase">Subtítulo/Frase do Banner</label>
+                      <input
+                        type="text"
+                        required
+                        value={settingsForm.visiteBannerSubtitulo}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, visiteBannerSubtitulo: e.target.value })}
+                        className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded text-fiosa-grafite text-xs"
+                      />
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="block font-bold text-fiosa-grafite/70 uppercase">Título de Introdução</label>
@@ -2113,8 +2173,46 @@ export default function FiosaAdminPage() {
                         </div>
                       </div>
                     </div>
+                    </div>
                   </div>
-                </div>
+                  
+                  {/* Secao: Guia do Viajante */}
+                  <div className="space-y-3 pt-2">
+                    <span className="block font-bold text-fiosa-grafite/80 text-[12px] uppercase">Seção: Guia do Viajante</span>
+                    <p className="text-[10px] text-fiosa-grafite/60 -mt-1 leading-tight mb-2">Para criar a lista de tópicos, digite cada item em uma nova linha.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label className="block font-bold text-fiosa-grafite/70 uppercase">O Que Fazer</label>
+                        <textarea
+                          rows={6}
+                          required
+                          value={settingsForm.visiteGuiaFazer}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, visiteGuiaFazer: e.target.value })}
+                          className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded leading-relaxed text-xs text-fiosa-grafite"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block font-bold text-fiosa-grafite/70 uppercase">Onde Comer</label>
+                        <textarea
+                          rows={6}
+                          required
+                          value={settingsForm.visiteGuiaComer}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, visiteGuiaComer: e.target.value })}
+                          className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded leading-relaxed text-xs text-fiosa-grafite"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block font-bold text-fiosa-grafite/70 uppercase">Onde Ficar</label>
+                        <textarea
+                          rows={6}
+                          required
+                          value={settingsForm.visiteGuiaFicar}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, visiteGuiaFicar: e.target.value })}
+                          className="w-full px-3 py-2 bg-fiosa-cru border border-fiosa-marrom/30 rounded leading-relaxed text-xs text-fiosa-grafite"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
                 {/* Sub-section: Experiencias and Contato Page Intros */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-fiosa-marrom/10">

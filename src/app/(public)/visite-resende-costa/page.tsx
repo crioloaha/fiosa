@@ -42,14 +42,16 @@ export default async function VisiteResendeCostaPage() {
           <div className="absolute inset-0 bg-fiosa-grafite/50" />
         </div>
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center space-y-4">
-          <span className="text-[10px] tracking-[0.2em] font-sans font-bold text-fiosa-areia uppercase bg-fiosa-terracota px-3 py-1 rounded-full">
-            Descubra as Vertentes
-          </span>
+          {config.visiteBannerTag && (
+            <span className="text-[10px] tracking-[0.2em] font-sans font-bold text-fiosa-areia uppercase bg-fiosa-terracota px-3 py-1 rounded-full">
+              {config.visiteBannerTag}
+            </span>
+          )}
           <h1 className="font-serif text-4xl md:text-6xl text-fiosa-cru tracking-wider leading-tight">
-            Visite Resende Costa
+            {config.visiteBannerTitulo || "Visite Resende Costa"}
           </h1>
           <p className="font-serif text-base text-fiosa-linho/85 italic max-w-xl mx-auto">
-            "A capital mineira do tear manual, aconchego nas montanhas e gastronomia típica."
+            {config.visiteBannerSubtitulo}
           </p>
         </div>
       </section>
@@ -98,10 +100,9 @@ export default async function VisiteResendeCostaPage() {
               </div>
               <h3 className="font-serif text-lg font-bold text-fiosa-grafite">O que fazer</h3>
               <ul className="font-sans text-xs text-fiosa-grafite/75 space-y-2 list-disc pl-4 leading-relaxed">
-                <li>Explorar a Rua São Sebastião e suas dezenas de lojas coloridas.</li>
-                <li>Visitar a Igreja Matriz de Nossa Senhora da Penha, no topo da colina.</li>
-                <li>Agendar uma <Link href="/experiencias" className="text-fiosa-terracota hover:underline font-bold">Vivência de Tear</Link> com os artesãos locais.</li>
-                <li>Apreciar o Mirante da Laje para fotos incríveis do pôr do sol.</li>
+                {config.visiteGuiaFazer?.split('\n').filter(Boolean).map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
               </ul>
             </div>
 
@@ -112,10 +113,9 @@ export default async function VisiteResendeCostaPage() {
               </div>
               <h3 className="font-serif text-lg font-bold text-fiosa-grafite">Onde Comer</h3>
               <ul className="font-sans text-xs text-fiosa-grafite/75 space-y-2 list-disc pl-4 leading-relaxed">
-                <li>Restaurantes de fogão a lenha no centro histórico (frango com quiabo, tutu à mineira).</li>
-                <li>Cafeterias artesanais com pão de queijo quentinho e broas de milho.</li>
-                <li>Visitar queijarias locais nos arredores da cidade.</li>
-                <li>Docerias típicas vendendo doce de leite e compotas caseiras.</li>
+                {config.visiteGuiaComer?.split('\n').filter(Boolean).map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
               </ul>
             </div>
 
@@ -126,9 +126,9 @@ export default async function VisiteResendeCostaPage() {
               </div>
               <h3 className="font-serif text-lg font-bold text-fiosa-grafite">Onde Ficar</h3>
               <ul className="font-sans text-xs text-fiosa-grafite/75 space-y-2 list-disc pl-4 leading-relaxed">
-                <li>Pousadas coloniais charmosas localizadas no centro histórico.</li>
-                <li>Chácaras de turismo rural nos arredores para maior contato com a natureza.</li>
-                <li>Hospedagens acolhedoras integradas a propriedades de artesãos.</li>
+                {config.visiteGuiaFicar?.split('\n').filter(Boolean).map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
               </ul>
             </div>
           </div>
@@ -156,16 +156,25 @@ export default async function VisiteResendeCostaPage() {
           </div>
         </div>
 
-        <div className="relative h-80 rounded-xl overflow-hidden border border-fiosa-marrom/20 shadow-sm">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14949.25603704207!2d-44.2483856!3d-20.9009848!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa1b4e2d33458ef%3A0xe54d2417743ea40c!2sResende%20Costa%2C%20MG%2C%2036340-000!5e0!3m2!1spt-BR!2sbr!4v1620000000000"
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen={true}
-            loading="lazy"
-          ></iframe>
-        </div>
+        {(() => {
+          let mapSrc = config.contatoMapaIframe || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14872.238473855011!2d-44.4237194!3d-20.8931135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9f560e206037e9%3A0xc6c4de055f65bc7c!2sResende%20Costa%2C%20MG!5e0!3m2!1spt-BR!2sbr!4v1714850000000";
+          if (mapSrc.includes('<iframe')) {
+            const match = mapSrc.match(/src="([^"]+)"/);
+            if (match) mapSrc = match[1];
+          }
+          return (
+            <div className="relative h-80 rounded-xl overflow-hidden border border-fiosa-marrom/20 shadow-sm">
+              <iframe
+                src={mapSrc}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+              ></iframe>
+            </div>
+          );
+        })()}
       </section>
 
       {/* CTA Final */}
