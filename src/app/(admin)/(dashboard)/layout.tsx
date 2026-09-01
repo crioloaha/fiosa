@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   ExternalLink,
+  Tag,
   Menu,
   X,
   Loader2,
@@ -94,14 +95,15 @@ export default function DashboardLayout({
     { name: 'Painel Geral', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Meu Perfil', href: '/admin/perfil', icon: User, hideForAdmin: false }, // Admins can edit their profile info
     { name: 'Gerenciar Produtos', href: '/admin/produtos', icon: ShoppingBag },
+    { name: 'Etiquetas', href: '/admin/etiquetas', icon: Tag },
     { name: 'Controle de Vendas', href: '/admin/vendas', icon: TrendingUp },
     { name: 'Exportar PDF', href: '/admin/catalogo-pdf', icon: FileText },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#FDFBF7]">
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#FDFBF7] print:bg-white">
       {/* 1. Mobile top bar */}
-      <header className="md:hidden flex items-center justify-between bg-[#2B2D2F] text-white px-6 py-4 z-40 border-b border-[#8D7F73]/20">
+      <header className="md:hidden flex items-center justify-between bg-[#2B2D2F] text-white px-6 py-4 z-40 border-b border-[#8D7F73]/20 print:hidden">
         <Link href="/" className="flex items-center gap-2">
           {config?.logoImagem && (
             <img
@@ -123,13 +125,13 @@ export default function DashboardLayout({
             <span className="text-[7px] tracking-[0.2em] text-[#8D7F73] uppercase mt-0.5">PAINEL</span>
           </div>
         </Link>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="text-white">
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="text-white print:hidden">
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </header>
 
       {/* 2. Sidebar (hidden on mobile, visible on desktop) */}
-      <aside className={`fixed md:sticky top-0 z-30 h-screen w-64 bg-[#2B2D2F] text-[#F3EFE9] flex flex-col border-r border-[#8D7F73]/30 transition-transform duration-300 md:translate-x-0 ${
+      <aside className={`fixed md:sticky top-0 z-30 h-screen w-64 bg-[#2B2D2F] text-[#F3EFE9] flex flex-col border-r border-[#8D7F73]/30 transition-transform duration-300 md:translate-x-0 print:hidden ${
         mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
         {/* Sidebar Header */}
@@ -242,12 +244,12 @@ export default function DashboardLayout({
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-20 bg-black/40 md:hidden"
+          className="fixed inset-0 z-20 bg-black/40 md:hidden print:hidden"
         />
       )}
 
       {/* 3. Main Workspace panel */}
-      <main className="flex-grow p-6 md:p-10 max-w-7xl mx-auto w-full overflow-y-auto">
+      <main className="flex-grow p-6 md:p-10 max-w-7xl mx-auto w-full overflow-y-auto print:p-0 print:max-w-none print:overflow-visible">
         {children}
       </main>
     </div>

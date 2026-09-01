@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const p = new PrismaClient();
-p.artesao.findMany()
-  .then(r => console.log('Successfully connected! Found artisans:', r.length))
+p.configuracao.findUnique({ where: { id: 'global' } })
+  .then(c => console.log('Logo fields:', { logoImagem: c.logoImagem, logoTextoImagem: c.logoTextoImagem }))
   .catch(console.error)
   .finally(() => p.$disconnect());

@@ -303,8 +303,9 @@ export default function FiosaAdminPage() {
     setSubmitting(true);
     setErrorMsg('');
 
+    const extension = blob.type === 'image/png' ? 'png' : 'jpg';
     const formData = new FormData();
-    formData.append('file', blob, `config-${cropperTarget}-${Date.now()}.jpg`);
+    formData.append('file', blob, `config-${cropperTarget}-${Date.now()}.${extension}`);
 
     try {
       const res = await fetch('/api/upload', {
