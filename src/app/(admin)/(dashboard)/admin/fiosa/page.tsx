@@ -278,7 +278,7 @@ export default function FiosaAdminPage() {
 
   const [cropperOpen, setCropperOpen] = useState(false);
   const [cropperSrc, setCropperSrc] = useState('');
-  const [cropperAspect, setCropperAspect] = useState<'1:1' | '3:1' | '16:9'>('16:9');
+  const [cropperAspect, setCropperAspect] = useState<'1:1' | '3:1' | '16:9' | 'auto'>('16:9');
   const [cropperTarget, setCropperTarget] = useState<string>('');
 
   const handleConfigImageSelect = (e: React.ChangeEvent<HTMLInputElement>, targetField: string) => {
@@ -287,10 +287,10 @@ export default function FiosaAdminPage() {
 
     const src = URL.createObjectURL(file);
     setCropperSrc(src);
-    if (targetField === 'logoImagem' || targetField === 'favicon') {
+    if (targetField === 'favicon') {
       setCropperAspect('1:1');
-    } else if (targetField === 'logoTextoImagem') {
-      setCropperAspect('3:1');
+    } else if (targetField === 'logoImagem' || targetField === 'logoTextoImagem') {
+      setCropperAspect('auto');
     } else {
       setCropperAspect('16:9');
     }

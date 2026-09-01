@@ -6,7 +6,7 @@ import { X, ZoomIn, ZoomOut, Move } from 'lucide-react';
 interface ImageCropperModalProps {
   isOpen: boolean;
   imageSrc: string; // Data URL or object URL of the selected image
-  aspectRatio: '1:1' | '3:1' | '16:9'; // Target crop ratio
+  aspectRatio: '1:1' | '3:1' | '16:9' | 'auto'; // Target crop ratio
   onClose: () => void;
   onCrop: (croppedBlob: Blob) => void;
   exportType?: 'image/jpeg' | 'image/png';
@@ -65,14 +65,13 @@ export default function ImageCropperModal({
   if (!isOpen) return null;
 
   // Aspect ratio calculations for visual crop box
-  let containerAspectRatioClass = 'aspect-square';
   let targetRatio = 1;
   if (aspectRatio === '3:1') {
-    containerAspectRatioClass = 'aspect-[3/1]';
     targetRatio = 3;
   } else if (aspectRatio === '16:9') {
-    containerAspectRatioClass = 'aspect-[16/9]';
     targetRatio = 16 / 9;
+  } else if (aspectRatio === 'auto') {
+    targetRatio = imgDims.width && imgDims.height ? imgDims.width / imgDims.height : 1;
   }
 
   // Handle Drag / Pan
@@ -194,7 +193,8 @@ export default function ImageCropperModal({
           {/* Mask Frame Container */}
           <div 
             ref={containerRef}
-            className={`w-full max-w-md border-2 border-[#C15C3D] relative overflow-hidden bg-slate-100 rounded-lg shadow-inner select-none ${containerAspectRatioClass}`}
+            className="w-full max-w-md border-2 border-[#C15C3D] relative overflow-hidden bg-slate-100 rounded-lg shadow-inner select-none"
+            style={{ aspectRatio: targetRatio }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleEnd}
