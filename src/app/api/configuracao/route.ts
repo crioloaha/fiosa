@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { verifyJWT } from '@/lib/auth';
 import { COLOR_PALETTES } from '@/lib/config';
@@ -224,6 +225,8 @@ export async function PUT(request: NextRequest) {
       },
     });
 
+    revalidatePath('/', 'layout');
+    
     return NextResponse.json(updatedConfig);
   } catch (error) {
     console.error('Erro ao atualizar configurações:', error);
