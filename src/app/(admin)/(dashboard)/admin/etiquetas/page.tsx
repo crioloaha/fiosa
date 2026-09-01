@@ -192,7 +192,7 @@ export default function EtiquetasPage() {
         `}} />
         
         {selectedList.map(product => {
-          const productUrl = \`\${baseUrl}/produto/\${product.slug || product.id}\`;
+          const productUrl = `${baseUrl}/produto/${product.slug || product.id}`;
           return (
             <div key={product.id} className="tag">
               {/* BACK OF TAG */}
@@ -304,7 +304,7 @@ export default function EtiquetasPage() {
                     <div className="font-medium text-[#2B2D2F]">{product.nome}</div>
                   </td>
                   <td className="px-6 py-4">
-                    {product.preco != null ? \`R$ \${product.preco.toFixed(2).replace('.', ',')}\` : '-'}
+                    {product.preco != null ? `R$ ${product.preco.toFixed(2).replace('.', ',')}` : '-'}
                   </td>
                   <td className="px-6 py-4">
                     {product.artesao?.marca || product.artesao?.nome || '-'}
