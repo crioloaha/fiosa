@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { getConfig } from '@/lib/config';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getConfig();
@@ -49,6 +50,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-fiosa-cru text-fiosa-grafite font-sans">
         {children}
+        <WhatsAppButton phoneNumber={config.contatoWhatsapp} />
       </body>
     </html>
   );
