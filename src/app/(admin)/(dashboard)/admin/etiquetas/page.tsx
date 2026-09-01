@@ -222,7 +222,7 @@ export default function EtiquetasPage() {
               {/* FRONT OF TAG */}
               <div className="tag-half tag-front">
                 {config?.logoImagem ? (
-                  <img src={config.logoImagem} alt="Logo" style={{ width: '40mm', height: 'auto', marginBottom: '4mm' }} />
+                  <img src={config.logoImagem} alt="Logo" style={{ maxWidth: '40mm', maxHeight: '20mm', objectFit: 'contain', marginBottom: '4mm' }} />
                 ) : (
                   <div className="organic-text brand-name">{config?.logoTexto || 'FIOSA'}</div>
                 )}
