@@ -236,6 +236,8 @@ export default function FiosaAdminPage() {
     ctaSubtitulo: '',
   });
 
+  const [originalConfig, setOriginalConfig] = useState<any>({});
+
   // Overlays / Forms States
   const [isArtisanFormOpen, setIsArtisanFormOpen] = useState(false);
   const [artisanForm, setArtisanForm] = useState({
@@ -344,6 +346,7 @@ export default function FiosaAdminPage() {
         if (Array.isArray(expData)) setExperiences(expData);
         if (Array.isArray(prodData)) setProducts(prodData);
         if (configData && !configData.error) {
+          setOriginalConfig(configData);
           setSettingsForm({
             logoTexto: configData.logoTexto || '',
             logoSubtitulo: configData.logoSubtitulo || '',
@@ -475,10 +478,24 @@ export default function FiosaAdminPage() {
     setErrorMsg('');
 
     try {
+      const payload: Record<string, any> = { ...settingsForm };
+      
+      // Remover imagens não alteradas para evitar payload gigantesco (erro 413)
+      const imageFields = [
+        'logoImagem', 'logoTextoImagem', 'favicon', 'heroImagem', 'fiosaImagem',
+        'sobreResendeCostaImagem', 'visiteSecao1Imagem', 'visiteSecao2Imagem', 'visiteBannerImagem'
+      ];
+      
+      for (const field of imageFields) {
+        if (payload[field] === originalConfig[field]) {
+          delete payload[field];
+        }
+      }
+
       const res = await fetch('/api/configuracao', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settingsForm),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao salvar configurações.');
