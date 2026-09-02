@@ -62,7 +62,7 @@ export default function Header({ config }: { config: any }) {
                         src={config.logoTextoImagem}
                         alt={config.logoTexto || 'FIOSA'}
                         className={`w-auto object-contain transition-all duration-300 ${
-                          hasSubtitle ? 'max-h-10 sm:max-h-12' : 'max-h-14 sm:max-h-16'
+                          hasSubtitle ? 'max-h-7 sm:max-h-9' : 'max-h-9 sm:max-h-11'
                         }`}
                       />
                     ) : (
