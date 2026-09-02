@@ -283,19 +283,39 @@ export default function FiosaAdminPage() {
   const [cropperAspect, setCropperAspect] = useState<'1:1' | '3:1' | '16:9' | 'auto'>('16:9');
   const [cropperTarget, setCropperTarget] = useState<string>('');
 
-  const handleConfigImageSelect = (e: React.ChangeEvent<HTMLInputElement>, targetField: string) => {
+  const handleConfigImageSelect = async (e: React.ChangeEvent<HTMLInputElement>, targetField: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Bypass cropper entirely for logos and favicon to preserve 100% original aspect/transparency
+    if (targetField === 'logoImagem' || targetField === 'logoTextoImagem' || targetField === 'favicon') {
+      setSubmitting(true);
+      setErrorMsg('');
+      try {
+        const formData = new FormData();
+        const extension = file.name.split('.').pop() || 'png';
+        formData.append('file', file, `config-${targetField}-${Date.now()}.${extension}`);
+        
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro no upload.');
+        
+        setSettingsForm((prev: any) => ({ ...prev, [targetField]: data.url }));
+        showSuccess('Imagem carregada com sucesso.');
+      } catch (err: any) {
+        setErrorMsg(err.message || 'Erro ao carregar imagem.');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     const src = URL.createObjectURL(file);
     setCropperSrc(src);
-    if (targetField === 'favicon') {
-      setCropperAspect('1:1');
-    } else if (targetField === 'logoImagem' || targetField === 'logoTextoImagem') {
-      setCropperAspect('auto');
-    } else {
-      setCropperAspect('16:9');
-    }
+    setCropperAspect('16:9');
     setCropperTarget(targetField);
     setCropperOpen(true);
   };
