@@ -15,7 +15,11 @@ import {
   Loader2,
   CheckCircle2,
   FolderOpen,
-  Sparkles
+  Sparkles,
+  ShoppingBag,
+  ToggleLeft,
+  ToggleRight,
+  AlertTriangle
 } from 'lucide-react';
 
 interface Category {
@@ -160,6 +164,9 @@ export default function GerenciarProdutosPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
+  const [catalogoAtivo, setCatalogoAtivo] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [togglingCatalog, setTogglingCatalog] = useState(false);
 
   // Form & view controllers
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -262,14 +269,16 @@ export default function GerenciarProdutosPage() {
     showSuccess('Cenário gerado com IA aplicado ao produto!');
   };
 
-  // Load products and categories
+  // Load products, categories, session and config
   const loadData = () => {
     setLoading(true);
     Promise.all([
       fetch('/api/produtos?admin=true').then((res) => res.json()),
       fetch('/api/categorias?admin=true').then((res) => res.json()),
+      fetch('/api/auth/me').then((res) => res.ok ? res.json() : null),
+      fetch('/api/configuracao').then((res) => res.ok ? res.json() : null),
     ])
-      .then(([prodData, catData]) => {
+      .then(([prodData, catData, sessionData, configData]) => {
         if (Array.isArray(prodData)) setProducts(prodData);
         if (Array.isArray(catData)) {
           setCategories(catData);
@@ -278,6 +287,12 @@ export default function GerenciarProdutosPage() {
             setFormData((prev) => ({ ...prev, categoriaId: catData[0].id }));
           }
         }
+        if (sessionData?.authenticated && sessionData?.user?.tipo === 'ADMIN') {
+          setIsAdmin(true);
+        }
+        if (configData && configData.catalogoAtivo !== undefined) {
+          setCatalogoAtivo(configData.catalogoAtivo !== false);
+        }
         setLoading(false);
       })
       .catch((err) => {
@@ -285,6 +300,31 @@ export default function GerenciarProdutosPage() {
         setErrorMsg('Erro ao carregar dados do catálogo.');
         setLoading(false);
       });
+  };
+
+  const handleToggleCatalogo = async (newValue: boolean) => {
+    setTogglingCatalog(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/configuracao', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ catalogoAtivo: newValue }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao alterar visibilidade do catálogo.');
+
+      setCatalogoAtivo(newValue);
+      showSuccess(
+        newValue
+          ? 'Catálogo ATIVADO com sucesso! As páginas e produtos agora estão visíveis no site público.'
+          : 'Catálogo DESATIVADO com sucesso! O menu e os produtos foram ocultados do público.'
+      );
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro ao alterar visibilidade do catálogo.');
+    } finally {
+      setTogglingCatalog(false);
+    }
   };
 
   useEffect(() => {
@@ -574,6 +614,77 @@ export default function GerenciarProdutosPage() {
             <Plus size={14} />
             Cadastrar Produto
           </button>
+        )}
+      </div>
+
+      {/* Catalog Visibility Status & Quick Toggle Bar */}
+      <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
+        catalogoAtivo
+          ? 'bg-[#606C38]/10 border-[#606C38]/30 text-[#2B2D2F]'
+          : 'bg-[#C15C3D]/10 border-[#C15C3D]/40 text-[#2B2D2F]'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className={`p-2.5 rounded-lg text-white shrink-0 ${catalogoAtivo ? 'bg-[#606C38]' : 'bg-[#C15C3D]'}`}>
+            <ShoppingBag size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-sans font-bold text-xs uppercase tracking-wider text-[#2B2D2F]">
+                Status do Catálogo no Site:
+              </span>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                catalogoAtivo
+                  ? 'bg-[#606C38] text-white'
+                  : 'bg-[#C15C3D] text-white'
+              }`}>
+                <span className={`h-1.5 w-1.5 rounded-full bg-white ${catalogoAtivo ? 'animate-pulse' : ''}`} />
+                {catalogoAtivo ? 'Ativo no Site (Visível)' : 'Desativado no Site (Oculto)'}
+              </span>
+            </div>
+            <p className="font-sans text-[11px] text-[#2B2D2F]/70 mt-0.5">
+              {catalogoAtivo
+                ? 'Os produtos cadastrados estão visíveis ao público nas vitrines e páginas do site.'
+                : 'O catálogo está temporariamente oculto para os visitantes. Os produtos continuam salvos e seguros aqui.'}
+            </p>
+          </div>
+        </div>
+
+        {isAdmin ? (
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              disabled={togglingCatalog}
+              onClick={() => handleToggleCatalogo(!catalogoAtivo)}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded font-sans text-xs font-bold uppercase tracking-wider transition-colors shadow-sm disabled:opacity-60 cursor-pointer ${
+                catalogoAtivo
+                  ? 'bg-[#C15C3D] hover:bg-[#C15C3D]/90 text-white'
+                  : 'bg-[#606C38] hover:bg-[#606C38]/90 text-white'
+              }`}
+            >
+              {togglingCatalog ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Atualizando...
+                </>
+              ) : catalogoAtivo ? (
+                <>
+                  <ToggleRight size={16} />
+                  Desativar Catálogo
+                </>
+              ) : (
+                <>
+                  <ToggleLeft size={16} />
+                  Ativar Catálogo
+                </>
+              )}
+            </button>
+          </div>
+        ) : (
+          !catalogoAtivo && (
+            <span className="text-[10px] font-bold uppercase text-[#C15C3D] tracking-wider shrink-0 bg-white/60 px-3 py-1 rounded border border-[#C15C3D]/20">
+              Oculto pela Administração
+            </span>
+          )
         )}
       </div>
 

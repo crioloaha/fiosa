@@ -38,6 +38,13 @@ export async function GET(
     const artesao = await prisma.artesao.findFirst({
       where,
       include: {
+        usuario: {
+          select: {
+            id: true,
+            email: true,
+            status: true,
+          },
+        },
         produtos: {
           where: {
             status: 'PUBLICADO',

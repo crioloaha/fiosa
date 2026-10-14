@@ -1,9 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Save, Upload, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import {
+  Save,
+  Upload,
+  Loader2,
+  CheckCircle2,
+  Shield,
+  Users,
+  ExternalLink,
+  ArrowLeft,
+  Key,
+  Lock,
+  Store,
+  AlertCircle
+} from 'lucide-react';
 import ImageCropperModal from '@/components/ImageCropperModal';
+
+interface ArtisanListItem {
+  id: string;
+  nome: string;
+  marca: string | null;
+  slug: string;
+  perfilAtivo: boolean;
+}
 
 interface ProfileData {
   id: string;
@@ -30,9 +52,22 @@ interface ProfileData {
   mostrarEndereco: boolean;
   mostrarPreco: boolean;
   aceitarWhats: boolean;
+  usuario?: {
+    id: string;
+    email: string;
+    status: string;
+  };
 }
 
-export default function PerfilPage() {
+function PerfilContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const artisanIdParam = searchParams.get('id');
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [artisansList, setArtisansList] = useState<ArtisanListItem[]>([]);
+  const [selectedArtisanId, setSelectedArtisanId] = useState<string>('');
+
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -40,38 +75,105 @@ export default function PerfilPage() {
   const [error, setError] = useState('');
   const [fotoChanged, setFotoChanged] = useState(false);
   const [capaChanged, setCapaChanged] = useState(false);
-  const router = useRouter();
+
+  // Admin-only credential fields
+  const [emailAcesso, setEmailAcesso] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+
+  // Cropper State
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperSrc, setCropperSrc] = useState('');
+  const [cropperAspect, setCropperAspect] = useState<'1:1' | '3:1' | '16:9'>('1:1');
+  const [cropperTarget, setCropperTarget] = useState<'foto' | 'capa'>('foto');
+
+  const fetchArtisanProfile = async (idOrSlug: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await fetch(`/api/artesao/${idOrSlug}`);
+      if (!res.ok) throw new Error('Perfil do artesão não encontrado.');
+      const data: ProfileData = await res.json();
+      setProfile(data);
+      setSelectedArtisanId(data.id);
+      setEmailAcesso(data.usuario?.email || '');
+      setNovaSenha('');
+      setFotoChanged(false);
+      setCapaChanged(false);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Não foi possível carregar o perfil do artesão.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Get artisan details linked to session user
-    fetch('/api/auth/me')
-      .then((res) => res.json())
-      .then((sessionData) => {
-        if (sessionData.authenticated && sessionData.user.artesao) {
-          const { slug } = sessionData.user.artesao;
-          return fetch(`/api/artesao/${slug}`);
-        } else {
-          throw new Error('Nenhum perfil de artesão vinculado.');
+    async function init() {
+      try {
+        setLoading(true);
+        setError('');
+
+        const meRes = await fetch('/api/auth/me');
+        const meData = await meRes.json();
+
+        if (!meData.authenticated) {
+          throw new Error('Sessão expirada. Por favor, faça login novamente.');
         }
-      })
-      .then((res) => res.json())
-      .then((artesaoData) => {
-        setProfile(artesaoData);
-        setLoading(false);
-      })
-      .catch((err) => {
+
+        const admin = meData.user.role === 'ADMIN';
+        setIsAdmin(admin);
+
+        if (admin) {
+          // Admin can manage all artisans
+          const res = await fetch('/api/artesao?admin=true');
+          const list: ArtisanListItem[] = await res.json();
+          const safeList = Array.isArray(list) ? list : [];
+          setArtisansList(safeList);
+
+          let targetId = artisanIdParam;
+          if (!targetId || !safeList.some((a) => a.id === targetId)) {
+            if (safeList.length > 0) {
+              targetId = safeList[0].id;
+              router.replace(`/admin/perfil?id=${targetId}`);
+            }
+          }
+
+          if (targetId) {
+            await fetchArtisanProfile(targetId);
+          } else {
+            setProfile(null);
+            setLoading(false);
+          }
+        } else {
+          // Regular artisan editing their own profile
+          if (meData.user.artesao) {
+            const targetId = meData.user.artesao.id || meData.user.artesao.slug;
+            await fetchArtisanProfile(targetId);
+          } else {
+            throw new Error('Nenhum perfil de artesão vinculado à sua conta.');
+          }
+        }
+      } catch (err: any) {
         console.error(err);
-        setError('Não foi possível carregar seu perfil de artesão.');
+        setError(err.message || 'Erro ao carregar dados do usuário.');
         setLoading(false);
-      });
-  }, []);
+      }
+    }
+
+    init();
+  }, [artisanIdParam]);
+
+  const handleSelectArtisan = (id: string) => {
+    if (!id || id === selectedArtisanId) return;
+    router.replace(`/admin/perfil?id=${id}`);
+  };
 
   const handleFieldChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     if (!profile) return;
     const { name, value, type } = e.target;
-    
+
     let finalValue: any = value;
     if (type === 'checkbox') {
       finalValue = (e.target as HTMLInputElement).checked;
@@ -80,13 +182,10 @@ export default function PerfilPage() {
     setProfile({ ...profile, [name]: finalValue });
   };
 
-  // Cropper State
-  const [cropperOpen, setCropperOpen] = useState(false);
-  const [cropperSrc, setCropperSrc] = useState('');
-  const [cropperAspect, setCropperAspect] = useState<'1:1' | '3:1' | '16:9'>('1:1');
-  const [cropperTarget, setCropperTarget] = useState<'foto' | 'capa'>('foto');
-
-  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>, targetField: 'foto' | 'capa') => {
+  const handleImageFileSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    targetField: 'foto' | 'capa'
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -102,19 +201,19 @@ export default function PerfilPage() {
     setCropperOpen(false);
 
     const formData = new FormData();
-    formData.append('file', blob, `${profile.slug}-${cropperTarget}.jpg`);
+    formData.append('file', blob, `${profile.slug || profile.id}-${cropperTarget}.jpg`);
 
     try {
       setSaving(true);
       setError('');
-      
+
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro no upload.');
+      if (!res.ok) throw new Error(data.error || 'Erro no upload da imagem.');
 
       setProfile({ ...profile, [cropperTarget]: data.url });
       if (cropperTarget === 'foto') setFotoChanged(true);
@@ -166,6 +265,21 @@ export default function PerfilPage() {
       updatePayload.capa = profile.capa;
     }
 
+    if (isAdmin) {
+      if (emailAcesso && emailAcesso !== profile.usuario?.email) {
+        updatePayload.email = emailAcesso;
+      }
+      if (novaSenha && novaSenha.trim().length > 0) {
+        if (novaSenha.trim().length < 6) {
+          setError('A nova senha deve ter no mínimo 6 caracteres.');
+          setSaving(false);
+          return;
+        }
+        updatePayload.senha = novaSenha.trim();
+      }
+      updatePayload.status = profile.perfilAtivo ? 'ATIVO' : 'INATIVO';
+    }
+
     try {
       const res = await fetch(`/api/artesao/${profile.id}`, {
         method: 'PUT',
@@ -179,7 +293,22 @@ export default function PerfilPage() {
       setSuccess(true);
       setFotoChanged(false);
       setCapaChanged(false);
-      router.refresh();
+      setNovaSenha('');
+      if (data.slug && data.slug !== profile.slug) {
+        setProfile({ ...profile, slug: data.slug, ...data });
+      }
+
+      // Update name in artisansList if changed
+      if (isAdmin && updatePayload.nome) {
+        setArtisansList((prev) =>
+          prev.map((a) =>
+            a.id === profile.id
+              ? { ...a, nome: updatePayload.nome, marca: updatePayload.marca, perfilAtivo: updatePayload.perfilAtivo }
+              : a
+          )
+        );
+      }
+
       setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {
       setError(err.message || 'Erro ao salvar perfil.');
@@ -190,47 +319,184 @@ export default function PerfilPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-32">
+      <div className="flex flex-col justify-center items-center py-32 space-y-3">
         <Loader2 className="text-[#C15C3D] animate-spin" size={36} />
+        <span className="font-sans text-xs text-[#2B2D2F]/60">Carregando perfil do artesão...</span>
       </div>
     );
   }
 
   if (error && !profile) {
     return (
-      <div className="bg-[#C15C3D]/10 border-l-4 border-[#C15C3D] p-4 text-xs text-[#C15C3D] font-sans font-semibold rounded">
-        {error}
+      <div className="space-y-4">
+        <div className="bg-[#C15C3D]/10 border-l-4 border-[#C15C3D] p-4 text-xs text-[#C15C3D] font-sans font-semibold rounded flex items-center gap-2">
+          <AlertCircle size={18} />
+          <span>{error}</span>
+        </div>
+        {isAdmin && (
+          <Link
+            href="/admin/fiosa"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#2B2D2F] text-white rounded text-xs font-sans font-bold uppercase tracking-wider hover:bg-[#C15C3D] transition-colors"
+          >
+            <ArrowLeft size={14} /> Voltar para Gestão FIOSA
+          </Link>
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Title */}
-      <div>
-        <h1 className="font-serif text-3xl font-bold text-[#2B2D2F]">Editar Meu Perfil</h1>
-        <p className="font-sans text-xs text-[#2B2D2F]/50 mt-1">
-          Mantenha seus dados de contato, história e preferências de privacidade atualizados.
-        </p>
-      </div>
+      {/* ADMIN SELECTOR BAR */}
+      {isAdmin && (
+        <div className="bg-[#F3EFE9] border border-[#8D7F73]/30 rounded-xl p-4 sm:p-5 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#C15C3D] text-white rounded-lg shadow-sm">
+                <Shield size={18} />
+              </div>
+              <div>
+                <span className="inline-block px-2 py-0.5 bg-[#C15C3D]/10 text-[#C15C3D] rounded font-mono text-[9px] font-bold uppercase tracking-wider mb-0.5">
+                  Modo Administrador
+                </span>
+                <h2 className="font-serif text-lg font-bold text-[#2B2D2F]">
+                  Edição de Perfil de Artesão
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href="/admin/fiosa"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#8D7F73]/30 hover:border-[#2B2D2F] text-[#2B2D2F] rounded text-xs font-sans font-bold uppercase tracking-wider transition-colors shadow-2xs"
+              >
+                <ArrowLeft size={14} />
+                Gestão FIOSA
+              </Link>
+              {profile?.slug && (
+                <Link
+                  href={`/artesao/${profile.slug}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#606C38] hover:bg-[#606C38]/90 text-white rounded text-xs font-sans font-bold uppercase tracking-wider transition-colors shadow-2xs"
+                  title="Abrir página pública em nova aba"
+                >
+                  <ExternalLink size={14} />
+                  Ver Perfil no Site
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-[#8D7F73]/20 flex flex-col sm:flex-row sm:items-center gap-3">
+            <label className="font-sans text-xs font-bold uppercase tracking-wider text-[#2B2D2F]/80 flex items-center gap-1.5 shrink-0">
+              <Users size={14} className="text-[#C15C3D]" />
+              Selecionar Artesão para Editar:
+            </label>
+            <select
+              value={selectedArtisanId}
+              onChange={(e) => handleSelectArtisan(e.target.value)}
+              className="w-full sm:w-80 px-3 py-2 bg-white border border-[#8D7F73]/40 rounded font-sans text-xs font-semibold text-[#2B2D2F] focus:outline-none focus:border-[#C15C3D] shadow-2xs cursor-pointer"
+            >
+              {artisansList.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nome} {a.marca ? `(${a.marca})` : ''} {!a.perfilAtivo ? '[INATIVO]' : ''}
+                </option>
+              ))}
+            </select>
+            <span className="text-[11px] text-[#2B2D2F]/60 font-sans">
+              Total: {artisansList.length} artesão(s) cadastrado(s)
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Title (for non-admin artisan) */}
+      {!isAdmin && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="font-serif text-3xl font-bold text-[#2B2D2F]">Editar Meu Perfil</h1>
+            <p className="font-sans text-xs text-[#2B2D2F]/60 mt-1">
+              Mantenha seus dados de contato, história, fotos e preferências de privacidade atualizados.
+            </p>
+          </div>
+          {profile?.slug && (
+            <Link
+              href={`/artesao/${profile.slug}`}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#606C38] hover:bg-[#606C38]/90 text-white rounded text-xs font-sans font-bold uppercase tracking-wider transition-colors shadow-sm self-start sm:self-auto"
+            >
+              <ExternalLink size={14} />
+              Ver Meu Perfil no Site
+            </Link>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl">
         {/* Status Alerts */}
         {success && (
-          <div className="flex items-center gap-2 bg-[#606C38]/10 border-l-4 border-[#606C38] p-4 text-xs text-[#606C38] font-sans font-bold rounded">
+          <div className="flex items-center gap-2 bg-[#606C38]/10 border-l-4 border-[#606C38] p-4 text-xs text-[#606C38] font-sans font-bold rounded shadow-2xs">
             <CheckCircle2 size={16} />
             Perfil salvo com sucesso! As alterações já estão públicas no site.
           </div>
         )}
         {error && (
-          <div className="bg-[#C15C3D]/10 border-l-4 border-[#C15C3D] p-4 text-xs text-[#C15C3D] font-sans font-bold rounded">
+          <div className="bg-[#C15C3D]/10 border-l-4 border-[#C15C3D] p-4 text-xs text-[#C15C3D] font-sans font-bold rounded shadow-2xs">
             {error}
+          </div>
+        )}
+
+        {/* ADMIN-ONLY: CREDENCIAIS E STATUS DA CONTA */}
+        {isAdmin && (
+          <div className="bg-[#F3EFE9] border-2 border-[#C15C3D]/30 rounded-xl p-6 space-y-4">
+            <div className="flex items-center gap-2 border-b border-[#8D7F73]/20 pb-2">
+              <Key size={18} className="text-[#C15C3D]" />
+              <h3 className="font-serif text-lg font-bold text-[#2B2D2F]">
+                Credenciais e Acesso da Conta (Superadmin)
+              </h3>
+            </div>
+            <p className="font-sans text-xs text-[#2B2D2F]/70">
+              Como administrador, você pode alterar o e-mail de login e redefinir a senha do artesão diretamente.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+              <div className="space-y-1">
+                <label className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
+                  E-mail de Login do Painel <span className="text-[#C15C3D]">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={emailAcesso}
+                  onChange={(e) => setEmailAcesso(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#8D7F73]/40 rounded focus:outline-none focus:border-[#C15C3D] font-sans text-xs"
+                  placeholder="email@artesao.com"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
+                  Redefinir Senha (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#8D7F73]/40 rounded focus:outline-none focus:border-[#C15C3D] font-sans text-xs"
+                  placeholder="Deixe em branco para manter a senha atual"
+                />
+                <span className="block text-[10px] text-[#2B2D2F]/55">
+                  Mínimo de 6 caracteres. Só preencha se desejar alterar.
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
         {/* 1. Capa & Avatar Upload Row */}
         <div className="bg-[#F3EFE9] border border-[#8D7F73]/20 rounded-xl p-6 space-y-6">
-          <h3 className="font-serif text-lg font-bold text-[#2B2D2F] border-b border-[#8D7F73]/20 pb-2">
+          <h3 className="font-serif text-lg font-bold text-[#2B2D2F] border-b border-[#8D7F73]/20 pb-2 flex items-center gap-2">
+            <Store size={18} className="text-[#C15C3D]" />
             Identidade Visual (Fotos)
           </h3>
 
@@ -263,7 +529,7 @@ export default function PerfilPage() {
                 </div>
               </div>
             </div>
- 
+
             {/* Foto de Capa */}
             <div className="space-y-3">
               <span className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
@@ -288,7 +554,7 @@ export default function PerfilPage() {
                       className="hidden"
                     />
                   </label>
-                  <p className="text-[10px] text-[#2B2D2F]/55">Recomendado: Banner retangular largo (ex: 1200x400px)</p>
+                  <p className="text-[10px] text-[#2B2D2F]/55">Recomendado: Banner panorâmico (ex: 1200x400px)</p>
                 </div>
               </div>
             </div>
@@ -361,7 +627,7 @@ export default function PerfilPage() {
           </div>
         </div>
 
-        {/* 3. Contato & Endereço */}
+        {/* 3. Contatos & Endereço */}
         <div className="bg-[#FDFBF7] border border-[#8D7F73]/20 rounded-xl p-6 space-y-4">
           <h3 className="font-serif text-lg font-bold text-[#2B2D2F] border-b border-[#8D7F73]/20 pb-2">
             Contatos e Localização
@@ -399,7 +665,7 @@ export default function PerfilPage() {
 
             <div className="space-y-1">
               <label className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
-                E-mail de Contato
+                E-mail Público de Contato
               </label>
               <input
                 type="email"
@@ -407,6 +673,7 @@ export default function PerfilPage() {
                 value={profile?.emailContato || ''}
                 onChange={handleFieldChange}
                 className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#8D7F73]/30 rounded focus:outline-none focus:border-[#C15C3D] font-sans text-xs"
+                placeholder="contato@meuatelie.com.br"
               />
             </div>
 
@@ -420,7 +687,21 @@ export default function PerfilPage() {
                 value={profile?.endereco || ''}
                 onChange={handleFieldChange}
                 className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#8D7F73]/30 rounded focus:outline-none focus:border-[#C15C3D] font-sans text-xs"
-                placeholder="Ex: Rua São Sebastião, 145, Centro"
+                placeholder="Ex: Rua Gonçalves Chaves, 145, Centro"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
+                Cidade / UF
+              </label>
+              <input
+                type="text"
+                name="cidade"
+                value={profile?.cidade || ''}
+                onChange={handleFieldChange}
+                className="w-full px-3 py-2 bg-[#FDFBF7] border border-[#8D7F73]/30 rounded focus:outline-none focus:border-[#C15C3D] font-sans text-xs"
+                placeholder="Ex: Resende Costa - MG"
               />
             </div>
 
@@ -535,7 +816,7 @@ export default function PerfilPage() {
               />
               <div>
                 <strong className="block font-bold">Perfil Público Ativo</strong>
-                <span className="text-[10px] text-[#2B2D2F]/65">Se desmarcado, seu perfil ficará invisível para visitantes.</span>
+                <span className="text-[10px] text-[#2B2D2F]/65">Se desmarcado, o perfil ficará invisível para visitantes.</span>
               </div>
             </label>
 
@@ -602,11 +883,11 @@ export default function PerfilPage() {
         </div>
 
         {/* Submit Save Button */}
-        <div>
+        <div className="flex items-center gap-4">
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center justify-center gap-2 bg-[#C15C3D] hover:bg-[#C15C3D]/95 text-white font-sans font-bold text-xs tracking-wider px-8 py-3.5 rounded uppercase transition-colors shadow-sm disabled:opacity-75"
+            className="flex items-center justify-center gap-2 bg-[#C15C3D] hover:bg-[#C15C3D]/95 text-white font-sans font-bold text-xs tracking-wider px-8 py-3.5 rounded uppercase transition-colors shadow-sm disabled:opacity-75 cursor-pointer"
           >
             {saving ? (
               <>
@@ -620,6 +901,17 @@ export default function PerfilPage() {
               </>
             )}
           </button>
+
+          {profile?.slug && (
+            <Link
+              href={`/artesao/${profile.slug}`}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 px-4 py-3 bg-[#F3EFE9] border border-[#8D7F73]/30 hover:border-[#2B2D2F] text-[#2B2D2F] font-sans font-bold text-xs uppercase tracking-wider rounded transition-colors"
+            >
+              <ExternalLink size={14} />
+              Visualizar Página Pública
+            </Link>
+          )}
         </div>
       </form>
 
@@ -633,5 +925,20 @@ export default function PerfilPage() {
         exportType={cropperTarget === 'foto' ? 'image/png' : 'image/jpeg'}
       />
     </div>
+  );
+}
+
+export default function PerfilPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col justify-center items-center py-32 space-y-3">
+          <Loader2 className="text-[#C15C3D] animate-spin" size={36} />
+          <span className="font-sans text-xs text-[#2B2D2F]/60">Carregando perfil...</span>
+        </div>
+      }
+    >
+      <PerfilContent />
+    </Suspense>
   );
 }

@@ -33,6 +33,7 @@ export async function PUT(request: NextRequest) {
     
     // Deconstruct and validate inputs
     const {
+      catalogoAtivo,
       logoTexto,
       logoSubtitulo,
       logoImagem,
@@ -109,6 +110,7 @@ export async function PUT(request: NextRequest) {
     const updatedConfig = await prisma.configuracao.upsert({
       where: { id: 'global' },
       update: {
+        ...(catalogoAtivo !== undefined && { catalogoAtivo }),
         logoTexto,
         logoSubtitulo,
         logoImagem,
@@ -222,14 +224,51 @@ export async function PUT(request: NextRequest) {
         contatoIntroTexto: contatoIntroTexto || "Tem alguma dúvida sobre os produtos...",
         ctaTitulo: ctaTitulo || "Venha conhecer os fios que conectam Resende Costa.",
         ctaSubtitulo: ctaSubtitulo || "Nossos artesãos e ateliês estão de portas abertas...",
+        catalogoAtivo: catalogoAtivo !== undefined ? catalogoAtivo : true,
       },
     });
 
     revalidatePath('/', 'layout');
+    revalidatePath('/produtos');
+    revalidatePath('/artesaos');
     
     return NextResponse.json(updatedConfig);
   } catch (error) {
     console.error('Erro ao atualizar configurações:', error);
+    return NextResponse.json({ error: 'Erro ao atualizar configurações.' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await getSession(request);
+    if (!session || session.tipo !== 'ADMIN') {
+      return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const dataToUpdate: any = {};
+
+    if (typeof body.catalogoAtivo === 'boolean') {
+      dataToUpdate.catalogoAtivo = body.catalogoAtivo;
+    }
+
+    const updatedConfig = await prisma.configuracao.upsert({
+      where: { id: 'global' },
+      update: dataToUpdate,
+      create: {
+        id: 'global',
+        catalogoAtivo: body.catalogoAtivo ?? true,
+      },
+    });
+
+    revalidatePath('/', 'layout');
+    revalidatePath('/produtos');
+    revalidatePath('/artesaos');
+
+    return NextResponse.json(updatedConfig);
+  } catch (error) {
+    console.error('Erro ao atualizar configurações via PATCH:', error);
     return NextResponse.json({ error: 'Erro ao atualizar configurações.' }, { status: 500 });
   }
 }

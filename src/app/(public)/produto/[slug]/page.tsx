@@ -6,6 +6,7 @@ import { MessageSquare, ArrowLeft, User, Ruler, Tag, Layers, ClipboardCheck, Pac
 import AnalyticsTracker from '@/components/AnalyticsTracker';
 import ProductImageGallery from '@/components/ProductImageGallery';
 import ProductDetailsClient from '@/components/ProductDetailsClient';
+import { getConfig } from '@/lib/config';
 
 import type { Metadata } from 'next';
 
@@ -62,6 +63,33 @@ export default async function ProdutoDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const config = await getConfig();
+
+  if (config.catalogoAtivo === false) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center py-20 px-4">
+        <div className="max-w-xl mx-auto text-center bg-fiosa-cru border border-fiosa-marrom/20 rounded-2xl p-10 shadow-sm space-y-6">
+          <span className="text-[11px] tracking-[0.25em] font-sans font-bold text-fiosa-terracota uppercase bg-fiosa-terracota/10 px-3.5 py-1.5 rounded-full inline-block">
+            Catálogo Offline
+          </span>
+          <h1 className="font-serif text-3xl text-fiosa-grafite">
+            Catálogo Temporariamente Fora do Ar
+          </h1>
+          <p className="font-sans text-sm text-fiosa-grafite/70 leading-relaxed">
+            As páginas de produtos estão temporariamente desativadas para atualização do acervo.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/artesaos"
+              className="inline-flex items-center gap-2 bg-fiosa-terracota text-fiosa-cru hover:bg-fiosa-terracota/90 px-6 py-3 rounded font-sans font-bold text-xs tracking-wider uppercase transition-all"
+            >
+              Conhecer nossos Artesãos
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Fetch product with artisan & category details
   const produto = await prisma.produto.findFirst({

@@ -2,6 +2,7 @@ import { prisma } from './prisma';
 
 export const DEFAULT_CONFIG = {
   id: 'global',
+  catalogoAtivo: true,
   logoTexto: 'FIOSA',
   logoSubtitulo: 'LOJA COLABORATIVA',
   logoImagem: null as string | null,

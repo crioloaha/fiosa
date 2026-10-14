@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MessageSquare, Phone, MapPin, Instagram, Globe, Facebook, Video } from 'lucide-react';
 import AnalyticsTracker from '@/components/AnalyticsTracker';
+import { getConfig } from '@/lib/config';
 
 import type { Metadata } from 'next';
 
@@ -54,6 +55,7 @@ export default async function ArtesaoProfilePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const config = await getConfig();
 
   // Fetch artisan with their public products
   const artesao = await prisma.artesao.findUnique({
@@ -315,8 +317,9 @@ export default async function ArtesaoProfilePage({
         </div>
 
         {/* Product Catalog Section */}
-        <div className="mt-20 space-y-12">
-          <div className="border-b border-[#8D7F73]/20 pb-4">
+        {config.catalogoAtivo !== false && (
+          <div className="mt-20 space-y-12">
+            <div className="border-b border-[#8D7F73]/20 pb-4">
             <h2 className="font-serif text-3xl text-[#2B2D2F]">
               Vitrine de Produtos
             </h2>
@@ -392,7 +395,8 @@ export default async function ArtesaoProfilePage({
             </div>
           )}
         </div>
-      </div>
+      )}
     </div>
+  </div>
   );
 }

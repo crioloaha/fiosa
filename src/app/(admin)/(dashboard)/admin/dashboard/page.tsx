@@ -12,7 +12,10 @@ import {
   User,
   ExternalLink,
   ChevronRight,
-  Loader2
+  Loader2,
+  ToggleLeft,
+  ToggleRight,
+  Shield
 } from 'lucide-react';
 import {
   BarChart,
@@ -71,6 +74,8 @@ export default function DashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [artesaoDetails, setArtesaoDetails] = useState<ArtisanStats | null>(null);
+  const [config, setConfig] = useState<any>(null);
+  const [togglingCatalog, setTogglingCatalog] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -111,7 +116,34 @@ export default function DashboardPage() {
         console.error('Erro no Dashboard:', err);
         setLoading(false);
       });
+
+    // 2. Load global site config
+    fetch('/api/configuracao')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && !data.error) setConfig(data);
+      })
+      .catch(() => {});
   }, []);
+
+  const handleToggleCatalogo = async (newVal: boolean) => {
+    setTogglingCatalog(true);
+    try {
+      const res = await fetch('/api/configuracao', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ catalogoAtivo: newVal }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setConfig((prev: any) => ({ ...prev, catalogoAtivo: newVal }));
+      }
+    } catch (err) {
+      console.error('Erro ao alternar catálogo:', err);
+    } finally {
+      setTogglingCatalog(false);
+    }
+  };
 
   if (loading || !session) {
     return (
@@ -125,14 +157,15 @@ export default function DashboardPage() {
 
   // If superadmin has no artisan linked, prompt to manage FIOSA
   if (user.tipo === 'ADMIN' && !user.artesao) {
+    const isCatAtivo = config?.catalogoAtivo !== false;
     return (
       <div className="space-y-6">
         <div className="bg-[#F3EFE9] border border-[#8D7F73]/20 p-8 rounded-xl space-y-4">
           <h1 className="font-serif text-3xl text-[#2B2D2F]">Bem-vindo, Administrador!</h1>
           <p className="font-sans text-sm text-[#2B2D2F]/70 leading-relaxed">
-            Você está logado como Administrador Geral da FIOSA. Esta conta permite gerenciar a plataforma, cadastrar artesãos, moderar produtos e definir categorias.
+            Você está logado como Administrador Geral da FIOSA. Esta conta permite gerenciar a plataforma, cadastrar artesãos, moderar produtos e definir configurações do site.
           </p>
-          <div className="pt-2">
+          <div className="pt-2 flex flex-wrap gap-3">
             <Link
               href="/admin/fiosa"
               className="inline-flex items-center gap-2 bg-[#606C38] hover:bg-[#606C38]/90 text-white font-sans font-bold text-xs tracking-wider px-6 py-3 rounded uppercase transition-colors"
@@ -140,7 +173,69 @@ export default function DashboardPage() {
               Ir para o Gerenciamento FIOSA
               <ChevronRight size={16} />
             </Link>
+            <Link
+              href="/admin/produtos"
+              className="inline-flex items-center gap-2 bg-[#C15C3D] hover:bg-[#C15C3D]/90 text-white font-sans font-bold text-xs tracking-wider px-6 py-3 rounded uppercase transition-colors"
+            >
+              Gerenciar Produtos
+              <ChevronRight size={16} />
+            </Link>
           </div>
+        </div>
+
+        {/* Quick Catalog Control Card for Superadmin */}
+        <div className="bg-[#FDFBF7] border border-[#8D7F73]/20 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-xl text-white shrink-0 ${isCatAtivo ? 'bg-[#606C38]' : 'bg-[#C15C3D]'}`}>
+              <ShoppingBag size={24} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-serif text-base font-bold text-[#2B2D2F]">
+                  Catálogo de Produtos no Site
+                </h3>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  isCatAtivo ? 'bg-[#606C38]/15 text-[#606C38]' : 'bg-[#C15C3D]/15 text-[#C15C3D]'
+                }`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${isCatAtivo ? 'bg-[#606C38] animate-pulse' : 'bg-[#C15C3D]'}`} />
+                  {isCatAtivo ? 'Ativo (Online)' : 'Desativado (Offline)'}
+                </span>
+              </div>
+              <p className="font-sans text-xs text-[#2B2D2F]/65 mt-1">
+                {isCatAtivo
+                  ? 'O catálogo está aberto e acessível para todos os visitantes do site.'
+                  : 'O catálogo está oculto do site público. Produtos e páginas de vitrine estão invisíveis para visitantes.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={togglingCatalog}
+            onClick={() => handleToggleCatalogo(!isCatAtivo)}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded font-sans text-xs font-bold uppercase tracking-wider transition-all shadow-sm shrink-0 disabled:opacity-60 cursor-pointer ${
+              isCatAtivo
+                ? 'bg-[#C15C3D] hover:bg-[#C15C3D]/90 text-white'
+                : 'bg-[#606C38] hover:bg-[#606C38]/90 text-white'
+            }`}
+          >
+            {togglingCatalog ? (
+              <>
+                <Loader2 size={15} className="animate-spin" />
+                Atualizando...
+              </>
+            ) : isCatAtivo ? (
+              <>
+                <ToggleRight size={17} />
+                Desativar Catálogo
+              </>
+            ) : (
+              <>
+                <ToggleLeft size={17} />
+                Ativar Catálogo
+              </>
+            )}
+          </button>
         </div>
       </div>
     );
@@ -218,6 +313,33 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Offline Catalog Notice */}
+      {config?.catalogoAtivo === false && (
+        <div className="bg-[#C15C3D]/10 border-l-4 border-[#C15C3D] p-4 rounded-r-xl flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <ShoppingBag className="text-[#C15C3D] shrink-0" size={20} />
+            <div>
+              <p className="font-sans text-xs font-bold text-[#C15C3D]">
+                Aviso: O catálogo público de produtos está temporariamente desativado no site pela administração.
+              </p>
+              <p className="font-sans text-[11px] text-[#2B2D2F]/70 mt-0.5">
+                Seus produtos continuam cadastrados e preservados. Você pode continuar adicionando e editando suas peças normalmente.
+              </p>
+            </div>
+          </div>
+          {user.tipo === 'ADMIN' && (
+            <button
+              type="button"
+              onClick={() => handleToggleCatalogo(true)}
+              disabled={togglingCatalog}
+              className="shrink-0 bg-[#606C38] text-white hover:bg-[#606C38]/90 px-3 py-1.5 rounded text-[11px] font-bold uppercase transition-colors cursor-pointer"
+            >
+              Ativar Catálogo
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Numerical Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">

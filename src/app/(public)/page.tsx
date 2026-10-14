@@ -123,12 +123,14 @@ export default async function HomePage() {
             >
               Conheça os Artesãos
             </Link>
-            <Link
-              href="/produtos"
-              className="w-full sm:w-auto border border-fiosa-linho text-fiosa-cru hover:bg-fiosa-linho hover:text-fiosa-grafite px-8 py-4 rounded font-sans font-bold text-xs tracking-wider transition-all duration-300 uppercase"
-            >
-              Explore os Produtos
-            </Link>
+            {config.catalogoAtivo !== false && (
+              <Link
+                href="/produtos"
+                className="w-full sm:w-auto border border-fiosa-linho text-fiosa-cru hover:bg-fiosa-linho hover:text-fiosa-grafite px-8 py-4 rounded font-sans font-bold text-xs tracking-wider transition-all duration-300 uppercase"
+              >
+                Explore os Produtos
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -207,28 +209,30 @@ export default async function HomePage() {
 
 
       {/* 4. Produtos em Destaque */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        <div className="flex flex-col md:flex-row justify-between items-baseline gap-4">
-          <div>
-            <span className="text-[11px] tracking-[0.2em] font-sans font-bold text-fiosa-oliva uppercase">
-              Curadoria de peças
-            </span>
-            <h2 className="font-serif text-3xl md:text-4xl text-fiosa-grafite mt-1">
-              Produtos em Destaque
-            </h2>
+      {config.catalogoAtivo !== false && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="flex flex-col md:flex-row justify-between items-baseline gap-4">
+            <div>
+              <span className="text-[11px] tracking-[0.2em] font-sans font-bold text-fiosa-oliva uppercase">
+                Curadoria de peças
+              </span>
+              <h2 className="font-serif text-3xl md:text-4xl text-fiosa-grafite mt-1">
+                Produtos em Destaque
+              </h2>
+            </div>
+            <Link
+              href="/produtos"
+              className="group inline-flex items-center gap-2 font-sans text-xs tracking-wider font-bold text-fiosa-oliva hover:underline"
+            >
+              VER TODOS OS PRODUTOS
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
-          <Link
-            href="/produtos"
-            className="group inline-flex items-center gap-2 font-sans text-xs tracking-wider font-bold text-fiosa-oliva hover:underline"
-          >
-            VER TODOS OS PRODUTOS
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
 
-        {/* Horizontal scroll carousel of featured products */}
-        <ProdutosCarousel produtos={produtos} />
-      </section>
+          {/* Horizontal scroll carousel of featured products */}
+          <ProdutosCarousel produtos={produtos} />
+        </section>
+      )}
 
       {/* 5. Experiências */}
       <section className="bg-fiosa-oliva py-20 text-fiosa-cru relative">

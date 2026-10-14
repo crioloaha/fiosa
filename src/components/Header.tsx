@@ -28,10 +28,12 @@ export default function Header({ config }: { config: any }) {
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
+  const isCatalogActive = config?.catalogoAtivo !== false;
+
   const menuItems = [
     { name: 'FIOSA', href: '/#a-fiosa' },
     { name: 'ARTESÃOS', href: '/artesaos' },
-    { name: 'PRODUTOS', href: '/produtos' },
+    ...(isCatalogActive ? [{ name: 'PRODUTOS', href: '/produtos' }] : []),
     { name: 'EXPERIÊNCIAS', href: '/experiencias' },
     { name: 'VISITE RESENDE COSTA', href: '/visite-resende-costa' },
     { name: 'CONTATO', href: '/contato' },

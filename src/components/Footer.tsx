@@ -39,9 +39,11 @@ export default function Footer({ config }: { config: any }) {
               <li>
                 <Link href="/artesaos" className="hover:text-fiosa-terracota transition-colors">ARTESÃOS</Link>
               </li>
-              <li>
-                <Link href="/produtos" className="hover:text-fiosa-terracota transition-colors">PRODUTOS</Link>
-              </li>
+              {config?.catalogoAtivo !== false && (
+                <li>
+                  <Link href="/produtos" className="hover:text-fiosa-terracota transition-colors">PRODUTOS</Link>
+                </li>
+              )}
               <li>
                 <Link href="/experiencias" className="hover:text-fiosa-terracota transition-colors">EXPERIÊNCIAS</Link>
               </li>

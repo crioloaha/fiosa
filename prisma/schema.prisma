@@ -151,6 +151,9 @@ model Experiencia {
 model Configuracao {
   id                 String   @id @default("global")
   
+  // Controle de Módulos
+  catalogoAtivo      Boolean  @default(true)
+  
   // Header / Logo
   logoTexto          String   @default("FIOSA")
   logoSubtitulo      String   @default("LOJA COLABORATIVA")

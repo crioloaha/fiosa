@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Shield,
   Users,
+  User,
   FolderTree,
   Compass,
   TrendingUp,
@@ -17,7 +19,11 @@ import {
   UserPlus,
   Lock,
   Settings,
-  Upload
+  Upload,
+  ShoppingBag,
+  ToggleLeft,
+  ToggleRight,
+  AlertTriangle
 } from 'lucide-react';
 import ImageCropperModal from '@/components/ImageCropperModal';
 
@@ -179,6 +185,7 @@ export default function FiosaAdminPage() {
 
   // Settings State
   const [settingsForm, setSettingsForm] = useState({
+    catalogoAtivo: true,
     logoTexto: '',
     logoSubtitulo: '',
     logoImagem: '',
@@ -368,6 +375,7 @@ export default function FiosaAdminPage() {
         if (configData && !configData.error) {
           setOriginalConfig(configData);
           setSettingsForm({
+            catalogoAtivo: configData.catalogoAtivo !== false,
             logoTexto: configData.logoTexto || '',
             logoSubtitulo: configData.logoSubtitulo || '',
             logoImagem: configData.logoImagem || '',
@@ -487,6 +495,32 @@ export default function FiosaAdminPage() {
       showSuccess('Imagem enviada com sucesso.');
     } catch (err: any) {
       setErrorMsg(err.message || 'Erro ao enviar imagem.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggleCatalogo = async (newValue: boolean) => {
+    setSubmitting(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/configuracao', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ catalogoAtivo: newValue }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao alterar visibilidade do catálogo.');
+
+      setSettingsForm((prev) => ({ ...prev, catalogoAtivo: newValue }));
+      setOriginalConfig((prev: any) => ({ ...prev, catalogoAtivo: newValue }));
+      showSuccess(
+        newValue
+          ? 'Catálogo ATIVADO com sucesso! As páginas e produtos agora estão visíveis no site público.'
+          : 'Catálogo DESATIVADO com sucesso! O menu e os produtos foram ocultados do site público.'
+      );
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro ao alterar visibilidade do catálogo.');
     } finally {
       setSubmitting(false);
     }
@@ -1022,9 +1056,20 @@ export default function FiosaAdminPage() {
 
               {isEditingArtisan && (
                 <div className="bg-[#F3EFE9] border border-[#8D7F73]/20 rounded-xl p-6 max-w-lg">
-                  <h4 className="font-serif text-base font-bold text-[#2B2D2F] border-b border-[#8D7F73]/20 pb-2 mb-4">
-                    Editar Dados do Artesão
-                  </h4>
+                  <div className="flex items-center justify-between border-b border-[#8D7F73]/20 pb-2 mb-4">
+                    <h4 className="font-serif text-base font-bold text-[#2B2D2F]">
+                      Editar Dados do Artesão
+                    </h4>
+                    {editingArtisanId && (
+                      <Link
+                        href={`/admin/perfil?id=${editingArtisanId}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2B2D2F] hover:bg-[#C15C3D] text-white rounded text-[10px] font-sans font-bold uppercase tracking-wider transition-colors shadow-2xs"
+                      >
+                        <User size={12} />
+                        Editor Completo
+                      </Link>
+                    )}
+                  </div>
                   <form onSubmit={handleEditArtisanSubmit} className="space-y-4">
                     <div className="space-y-1">
                       <label className="block font-sans text-[10px] font-bold uppercase tracking-wider text-[#2B2D2F]/70">
@@ -1131,11 +1176,19 @@ export default function FiosaAdminPage() {
                           </button>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <div className="flex justify-end gap-1.5">
+                          <div className="flex justify-end items-center gap-1.5">
+                            <Link
+                              href={`/admin/perfil?id=${a.id}`}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#2B2D2F] text-white hover:bg-[#C15C3D] rounded text-[10px] font-sans font-bold uppercase tracking-wider transition-colors shadow-2xs"
+                              title="Editar perfil completo (fotos, capa, história, endereço, contatos, etc.)"
+                            >
+                              <User size={12} />
+                              Perfil Completo
+                            </Link>
                             <button
                               onClick={() => handleOpenArtisanEdit(a)}
                               className="p-1.5 bg-[#F3EFE9] text-[#2B2D2F] border border-[#8D7F73]/30 hover:border-[#C15C3D] rounded transition-all"
-                              title="Editar artesão"
+                              title="Edição rápida"
                             >
                               <Edit2 size={12} />
                             </button>
@@ -1478,6 +1531,81 @@ export default function FiosaAdminPage() {
           {activeTab === 'settings' && (
             <form onSubmit={handleSettingsSubmit} className="space-y-8 font-sans text-xs text-fiosa-grafite">
               
+              {/* Section 0: Catálogo de Produtos Visibility Module */}
+              <div className="bg-fiosa-cru border-2 border-fiosa-marrom/20 rounded-xl p-6 shadow-sm space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-fiosa-marrom/20 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-lg text-white ${settingsForm.catalogoAtivo ? 'bg-[#606C38]' : 'bg-[#C15C3D]'}`}>
+                      <ShoppingBag size={22} />
+                    </div>
+                    <div>
+                      <h3 className="font-serif text-lg font-bold text-fiosa-grafite">
+                        Visibilidade do Catálogo de Produtos no Site
+                      </h3>
+                      <p className="text-[11px] text-fiosa-grafite/60 mt-0.5">
+                        Controle mestre para ativar ou desativar temporariamente o catálogo público de peças da FIOSA.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div>
+                    {settingsForm.catalogoAtivo ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#606C38]/15 text-[#606C38] border border-[#606C38]/30">
+                        <span className="h-2 w-2 rounded-full bg-[#606C38] animate-pulse" />
+                        Catálogo Ativo no Site
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#C15C3D]/15 text-[#C15C3D] border border-[#C15C3D]/30">
+                        <span className="h-2 w-2 rounded-full bg-[#C15C3D]" />
+                        Catálogo Oculto do Site
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Switch Button Controls */}
+                <div className="bg-fiosa-linho/60 border border-fiosa-marrom/20 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="space-y-1.5 max-w-xl">
+                    <h4 className="font-serif text-sm font-bold text-fiosa-grafite">
+                      {settingsForm.catalogoAtivo
+                        ? 'O catálogo está ONLINE para todos os visitantes'
+                        : 'O catálogo está OFFLINE (Oculto para o público)'}
+                    </h4>
+                    <p className="text-xs text-fiosa-grafite/70 leading-relaxed">
+                      {settingsForm.catalogoAtivo
+                        ? 'Os visitantes conseguem ver o menu "Produtos", as vitrines de destaque na Página Inicial, os produtos em perfis de artesãos e os detalhes das peças.'
+                        : 'O menu "Produtos" e as seções de produtos na Home foram removidos do público. Acesso direto a URLs de produtos exibe aviso amigável de atualização. Seus produtos cadastrados continuam 100% preservados e editáveis no painel.'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => handleToggleCatalogo(!settingsForm.catalogoAtivo)}
+                      className={`inline-flex items-center gap-2 px-5 py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
+                        settingsForm.catalogoAtivo
+                          ? 'bg-[#C15C3D] hover:bg-[#C15C3D]/90 text-white'
+                          : 'bg-[#606C38] hover:bg-[#606C38]/90 text-white'
+                      }`}
+                    >
+                      {settingsForm.catalogoAtivo ? (
+                        <>
+                          <ToggleRight size={18} />
+                          Desativar Catálogo
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft size={18} />
+                          Ativar Catálogo
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Section 1: Visual Identity and Colors */}
               <div className="bg-fiosa-cru border border-fiosa-marrom/20 rounded-xl p-6 shadow-sm space-y-6">
                 <h3 className="font-serif text-lg font-bold border-b border-fiosa-marrom/20 pb-2 text-fiosa-grafite">

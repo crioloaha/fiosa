@@ -93,7 +93,7 @@ export default function DashboardLayout({
 
   const menuItems = [
     { name: 'Painel Geral', href: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Meu Perfil', href: '/admin/perfil', icon: User, hideForAdmin: false }, // Admins can edit their profile info
+    { name: isAdmin ? 'Perfis de Artesãos' : 'Meu Perfil', href: '/admin/perfil', icon: User },
     { name: 'Gerenciar Produtos', href: '/admin/produtos', icon: ShoppingBag },
     { name: 'Etiquetas', href: '/admin/etiquetas', icon: Tag },
     { name: 'Controle de Vendas', href: '/admin/vendas', icon: TrendingUp },
