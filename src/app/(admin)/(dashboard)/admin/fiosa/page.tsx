@@ -82,7 +82,7 @@ async function compressImage(file: File, maxWidth = 1200, maxHeight = 1200, qual
 const PRESETS = {
   ORIGINAL: {
     corPrimaria: '#C15C3D',
-    corSecundaria: '#606C38',
+    corSecundaria: '#BB4428',
     corFundo: '#FDFBF7',
     corFundoAlternativo: '#F3EFE9',
     corTexto: '#2B2D2F',

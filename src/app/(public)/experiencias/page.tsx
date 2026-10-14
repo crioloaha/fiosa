@@ -93,7 +93,7 @@ export default async function ExperienciasPage() {
                   <Link
                     href={bookingUrl}
                     target="_blank"
-                    className="flex items-center justify-center gap-2 w-full bg-fiosa-oliva hover:bg-fiosa-terracota text-white py-3 rounded font-sans font-bold text-[10px] tracking-wider uppercase transition-colors shadow-sm"
+                    className="flex items-center justify-center gap-2 w-full bg-[#BB4428] hover:bg-[#BB4428]/90 text-white py-3.5 rounded font-sans font-bold text-xs tracking-wider uppercase transition-colors shadow-sm cursor-pointer"
                   >
                     <MessageSquare size={14} />
                     Reservar Experiência

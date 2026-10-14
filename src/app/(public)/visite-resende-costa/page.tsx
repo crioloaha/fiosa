@@ -157,13 +157,17 @@ export default async function VisiteResendeCostaPage() {
         </div>
 
         {(() => {
-          let mapSrc = config.contatoMapaIframe || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14872.238473855011!2d-44.4237194!3d-20.8931135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9f560e206037e9%3A0xc6c4de055f65bc7c!2sResende%20Costa%2C%20MG!5e0!3m2!1spt-BR!2sbr!4v1714850000000";
+          let mapSrc = (config.contatoMapaIframe || '').trim();
           if (mapSrc.includes('<iframe')) {
-            const match = mapSrc.match(/src="([^"]+)"/);
+            const match = mapSrc.match(/src=["']([^"']+)["']/i);
             if (match) mapSrc = match[1];
           }
+          if (!mapSrc || !mapSrc.startsWith('http')) {
+            const addr = 'Resende Costa, MG, 36340-000';
+            mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(addr)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+          }
           return (
-            <div className="relative h-80 rounded-xl overflow-hidden border border-fiosa-marrom/20 shadow-sm">
+            <div className="relative h-80 rounded-xl overflow-hidden border border-fiosa-marrom/20 shadow-sm bg-slate-100">
               <iframe
                 src={mapSrc}
                 width="100%"
@@ -171,28 +175,30 @@ export default async function VisiteResendeCostaPage() {
                 style={{ border: 0 }}
                 allowFullScreen={true}
                 loading="lazy"
-              ></iframe>
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Mapa de Resende Costa"
+              />
             </div>
           );
         })()}
       </section>
 
       {/* CTA Final */}
-      <section className="max-w-5xl mx-auto px-4 bg-fiosa-oliva rounded-2xl text-center py-16 text-fiosa-cru space-y-6">
-        <h2 className="font-serif text-2xl md:text-4xl">Quer explorar as peças locais agora mesmo?</h2>
-        <p className="max-w-md mx-auto font-sans text-xs text-fiosa-linho/70 leading-relaxed">
+      <section className="max-w-5xl mx-auto px-4 bg-[#BB4428] rounded-2xl text-center py-16 text-white space-y-6 shadow-md">
+        <h2 className="font-serif text-2xl md:text-4xl text-white">Quer explorar as peças locais agora mesmo?</h2>
+        <p className="max-w-md mx-auto font-sans text-xs text-white/80 leading-relaxed">
           Nossos artesãos estão prontos para receber você em seus ateliês físicos ou virtuais. Conheça as peças no nosso catálogo!
         </p>
         <div className="pt-2 flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link
             href="/produtos"
-            className="w-full sm:w-auto bg-fiosa-terracota hover:bg-fiosa-terracota/90 text-white font-sans font-bold text-xs tracking-wider px-8 py-3.5 rounded uppercase transition-colors shadow-sm"
+            className="w-full sm:w-auto bg-white text-[#BB4428] hover:bg-[#FDFBF7] font-sans font-bold text-xs tracking-wider px-8 py-3.5 rounded uppercase transition-colors shadow-sm cursor-pointer"
           >
             Explorar Catálogo
           </Link>
           <Link
             href="/artesaos"
-            className="w-full sm:w-auto border border-fiosa-cru text-fiosa-cru hover:bg-fiosa-cru hover:text-fiosa-oliva font-sans font-bold text-xs tracking-wider px-8 py-3.5 rounded uppercase transition-all"
+            className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-[#BB4428] font-sans font-bold text-xs tracking-wider px-8 py-3.5 rounded uppercase transition-all cursor-pointer"
           >
             Conhecer Artesãos
           </Link>

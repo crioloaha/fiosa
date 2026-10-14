@@ -235,18 +235,18 @@ export default async function HomePage() {
       )}
 
       {/* 5. Experiências */}
-      <section className="bg-fiosa-oliva py-20 text-fiosa-cru relative">
-        {/* Top/Bottom Terracota Loom Fringes */}
-        <div className="absolute top-0 inset-x-0 franja-terracota" />
+      <section className="bg-[#BB4428] py-20 text-white relative">
+        {/* Top/Bottom Loom Fringes */}
+        <div className="absolute top-0 inset-x-0 franja-terracota opacity-60" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-4">
-            <span className="text-[11px] tracking-[0.2em] font-sans font-bold text-fiosa-linho uppercase bg-fiosa-terracota/80 px-3 py-1 rounded-full">
+            <span className="text-[11px] tracking-[0.2em] font-sans font-bold text-white uppercase bg-black/20 px-3.5 py-1.5 rounded-full">
               Turismo de Experiência
             </span>
-            <h2 className="font-serif text-3xl md:text-4xl">
+            <h2 className="font-serif text-3xl md:text-4xl text-white">
               Vivencie o Artesanato de Perto
             </h2>
-            <p className="font-sans text-sm text-fiosa-linho/80 leading-relaxed">
+            <p className="font-sans text-sm text-white/90 leading-relaxed">
               Resende Costa não é apenas sobre o produto final. É sobre ver as mãos criando, ouvir a lançadeira deslizando no tear e aprender saberes seculares. Escolha uma vivência!
             </p>
           </div>
@@ -274,19 +274,19 @@ export default async function HomePage() {
                   </p>
                   <div className="space-y-2 pt-3 border-t border-fiosa-marrom/10 text-xs text-fiosa-grafite/60">
                     <div className="flex items-center gap-2">
-                      <Compass size={14} className="text-fiosa-oliva" />
+                      <Compass size={14} className="text-[#BB4428]" />
                       <span>{exp.localizacao}</span>
                     </div>
                     {exp.duracao && (
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-fiosa-oliva">Duração:</span>
+                        <span className="font-bold text-[#BB4428]">Duração:</span>
                         <span>{exp.duracao}</span>
                       </div>
                     )}
                     {exp.preco ? (
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-fiosa-terracota">Valor:</span>
-                        <span className="font-bold text-fiosa-terracota">
+                        <span className="font-bold text-[#BB4428]">Valor:</span>
+                        <span className="font-bold text-[#BB4428]">
                           R$ {exp.preco.toFixed(2).replace('.', ',')}
                         </span>
                       </div>
@@ -299,7 +299,7 @@ export default async function HomePage() {
                   </div>
                   <Link
                     href="/experiencias"
-                    className="block text-center bg-fiosa-oliva text-white hover:bg-fiosa-terracota py-3 rounded font-sans font-bold text-[10px] tracking-wider transition-colors uppercase"
+                    className="block text-center bg-[#BB4428] text-white hover:bg-[#BB4428]/90 py-3 rounded font-sans font-bold text-xs tracking-wider transition-colors uppercase shadow-sm cursor-pointer"
                   >
                     Ver Detalhes
                   </Link>
@@ -308,7 +308,7 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
-        <div className="absolute bottom-0 inset-x-0 franja-terracota" />
+        <div className="absolute bottom-0 inset-x-0 franja-terracota opacity-60" />
       </section>
 
       {/* 6. Visite Resende Costa */}

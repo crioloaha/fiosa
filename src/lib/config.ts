@@ -22,7 +22,7 @@ export const DEFAULT_CONFIG = {
   
   paletaNome: 'ORIGINAL',
   corPrimaria: '#C15C3D',
-  corSecundaria: '#606C38',
+  corSecundaria: '#BB4428',
   corFundo: '#FDFBF7',
   corFundoAlternativo: '#F3EFE9',
   corTexto: '#2B2D2F',
@@ -74,7 +74,7 @@ export const DEFAULT_CONFIG = {
 export const COLOR_PALETTES = {
   ORIGINAL: {
     corPrimaria: '#C15C3D',
-    corSecundaria: '#606C38',
+    corSecundaria: '#BB4428',
     corFundo: '#FDFBF7',
     corFundoAlternativo: '#F3EFE9',
     corTexto: '#2B2D2F',

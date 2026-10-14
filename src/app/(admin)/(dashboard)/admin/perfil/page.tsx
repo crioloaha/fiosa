@@ -120,7 +120,7 @@ function PerfilContent() {
           throw new Error('Sessão expirada. Por favor, faça login novamente.');
         }
 
-        const admin = meData.user.role === 'ADMIN';
+        const admin = meData.user.tipo === 'ADMIN' || meData.user.role === 'ADMIN';
         setIsAdmin(admin);
 
         if (admin) {
@@ -131,11 +131,12 @@ function PerfilContent() {
           setArtisansList(safeList);
 
           let targetId = artisanIdParam;
-          if (!targetId || !safeList.some((a) => a.id === targetId)) {
-            if (safeList.length > 0) {
-              targetId = safeList[0].id;
-              router.replace(`/admin/perfil?id=${targetId}`);
-            }
+          const found = safeList.find((a) => a.id === targetId || a.slug === targetId);
+          if (found) {
+            targetId = found.id;
+          } else if (safeList.length > 0) {
+            targetId = safeList[0].id;
+            router.replace(`/admin/perfil?id=${targetId}`);
           }
 
           if (targetId) {

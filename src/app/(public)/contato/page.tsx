@@ -111,13 +111,17 @@ export default async function ContatoPage() {
 
           {/* Embedded Map */}
           {(() => {
-            let mapSrc = config.contatoMapaIframe || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14872.238473855011!2d-44.4237194!3d-20.8931135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9f560e206037e9%3A0xc6c4de055f65bc7c!2sResende%20Costa%2C%20MG!5e0!3m2!1spt-BR!2sbr!4v1714850000000";
+            let mapSrc = (config.contatoMapaIframe || '').trim();
             if (mapSrc.includes('<iframe')) {
-              const match = mapSrc.match(/src="([^"]+)"/);
+              const match = mapSrc.match(/src=["']([^"']+)["']/i);
               if (match) mapSrc = match[1];
             }
+            if (!mapSrc || !mapSrc.startsWith('http')) {
+              const addr = config.contatoEndereco || 'Resende Costa, MG, 36340-000';
+              mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(addr)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+            }
             return (
-              <div className="relative h-48 w-full rounded overflow-hidden shadow-sm border border-fiosa-marrom/20">
+              <div className="relative h-60 w-full rounded-xl overflow-hidden shadow-sm border border-fiosa-marrom/20 bg-slate-100">
                 <iframe
                   src={mapSrc}
                   width="100%"
@@ -125,7 +129,9 @@ export default async function ContatoPage() {
                   style={{ border: 0 }}
                   allowFullScreen={true}
                   loading="lazy"
-                ></iframe>
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Localização da FIOSA no Google Maps"
+                />
               </div>
             );
           })()}
